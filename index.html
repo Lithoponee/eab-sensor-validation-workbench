@@ -1,0 +1,1486 @@
+<meta charset="utf-8">
+<title>EAB Sensor Validation Workbench</title>
+<meta name="description" content="Interactive calculations for affinity, transport, surface coverage, transduction, noise, detection, and dynamic fidelity in electrochemical aptamer sensors.">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='13' fill='%232D5BD1'/%3E%3Cpath d='M12 40c8-22 13 8 20-14s12 16 20-4' fill='none' stroke='white' stroke-width='5' stroke-linecap='round'/%3E%3Ccircle cx='52' cy='22' r='4' fill='%23F2B24D'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#F3F7F7; --surface:#FFFFFF; --surface-2:#F3F8F7;
+  --ink:#142326; --ink-2:#4B6064; --ink-3:#77898C;
+  --rule:#DEE8E7; --rule-2:#C7D6D4;
+  --accent:#176B87;
+  --s1:#0072B2; --s2:#E69F00; --s3:#7B61A8;
+  --crit:#C43C39; --crit-soft:rgba(196,60,57,.075);
+  --ok:#207567; --ok-soft:rgba(32,117,103,.09);
+  --axis:#29373A;
+  --grid:#E5EDEC; --band:rgba(11,116,120,.055);
+  --shadow:0 1px 2px rgba(20,35,38,.04), 0 18px 44px -28px rgba(20,54,58,.30);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D1517; --surface:#142023; --surface-2:#19282B;
+    --ink:#EDF5F4; --ink-2:#A7B9B8; --ink-3:#748887;
+    --rule:#233538; --rule-2:#345054;
+    --accent:#77BFE0;
+    --s1:#6DB9E6; --s2:#F2B84B; --s3:#B69AD8;
+    --crit:#E0695D; --crit-soft:rgba(224,105,93,.11);
+    --ok:#62B69E; --ok-soft:rgba(98,182,158,.12); --axis:#D7E0E1;
+    --grid:#213236; --band:rgba(87,193,194,.07);
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 22px -12px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D1517; --surface:#142023; --surface-2:#19282B;
+  --ink:#EDF5F4; --ink-2:#A7B9B8; --ink-3:#748887;
+  --rule:#233538; --rule-2:#345054;
+  --accent:#77BFE0;
+  --s1:#6DB9E6; --s2:#F2B84B; --s3:#B69AD8;
+  --crit:#E0695D; --crit-soft:rgba(224,105,93,.11);
+  --ok:#62B69E; --ok-soft:rgba(98,182,158,.12); --axis:#D7E0E1;
+  --grid:#213236; --band:rgba(87,193,194,.07);
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 22px -12px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box}
+body{
+  background:
+    radial-gradient(circle at 12% -8%,color-mix(in srgb,var(--accent) 9%,transparent),transparent 32rem),
+    var(--bg); color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:15px; line-height:1.55; margin:0; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1160px; margin:0 auto; padding-inline:clamp(16px,3vw,28px); padding-block:0 72px}
+.hero-wrap{padding-bottom:0}
+h1,h2{font-family:"IBM Plex Serif",Georgia,serif; text-wrap:balance; margin:0}
+header{position:relative; overflow:hidden; margin-top:22px; padding:clamp(24px,3.5vw,40px);
+  border:1px solid var(--rule); border-radius:22px;
+  background:linear-gradient(135deg,var(--surface) 0%,color-mix(in srgb,var(--surface) 88%,var(--accent)) 100%);
+  box-shadow:var(--shadow)}
+header:after{content:""; position:absolute; width:260px; height:260px; right:-90px; top:-120px;
+  border-radius:50%; border:42px solid color-mix(in srgb,var(--accent) 8%,transparent); pointer-events:none}
+.hero-kicker{position:relative; z-index:1; display:flex; align-items:center; gap:9px; margin-bottom:15px;
+  font:600 11px/1 "IBM Plex Mono",monospace; letter-spacing:.12em; text-transform:uppercase; color:var(--accent)}
+.hero-dot{width:8px; height:8px; border-radius:50%; background:var(--accent); box-shadow:0 0 0 5px color-mix(in srgb,var(--accent) 12%,transparent)}
+h1{position:relative; z-index:1; font-size:clamp(31px,4.8vw,46px); max-width:19ch; line-height:1.04; font-weight:650; letter-spacing:-.03em}
+.sub{position:relative; z-index:1; color:var(--ink-2); max-width:72ch; margin-top:10px}
+.sub b{color:var(--ink); font-weight:600}
+.seed{font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.035em;
+  color:var(--ink-3); margin-top:11px; max-width:78ch}
+
+/* sticky nav */
+nav{position:sticky; top:env(safe-area-inset-top,0px); z-index:20;
+  background:color-mix(in srgb,var(--bg) 82%,transparent); backdrop-filter:blur(14px) saturate(1.3);
+  border-bottom:1px solid var(--rule); margin-top:22px}
+nav .inner{max-width:1160px; margin:0 auto; padding:10px clamp(16px,3vw,28px); display:flex; gap:5px;
+  overflow-x:auto; scrollbar-width:none}
+nav .inner::-webkit-scrollbar{display:none}
+nav a{font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.035em;
+  color:var(--ink-3); text-decoration:none; padding:7px 10px; border-radius:999px; white-space:nowrap}
+nav a:hover{color:var(--accent); background:var(--surface)}
+
+.panel{background:var(--surface); border:1px solid var(--rule); border-radius:16px; box-shadow:var(--shadow)}
+.controls{margin-top:30px; padding:22px 22px 24px}
+.controls-head{display:flex; flex-wrap:wrap; gap:12px; align-items:baseline; justify-content:space-between; margin-bottom:16px}
+.eyebrow{font-family:"IBM Plex Mono",monospace; font-size:11px; font-weight:500;
+  letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3)}
+.presets{display:flex; gap:6px; flex-wrap:wrap}
+button.chip{font:500 11px/1 "IBM Plex Mono",monospace; letter-spacing:.025em; padding:9px 12px;
+  border-radius:999px; cursor:pointer; background:var(--surface-2); color:var(--ink-2); border:1px solid var(--rule)}
+button.chip:hover{color:var(--accent); border-color:var(--accent); transform:translateY(-1px)}
+button.chip[aria-pressed="true"]{background:var(--accent); color:#fff; border-color:var(--accent)}
+button.chip:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+.grid-ctl{display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:10px}
+.ctl{padding:12px 13px 10px; border:1px solid var(--rule); border-radius:11px; background:var(--surface-2)}
+.ctl .name{display:block; font-size:12px; color:var(--ink-2); cursor:pointer; margin-bottom:5px}
+.ctl input.val{display:block; width:100%; font-family:"IBM Plex Mono",monospace;
+  font-size:14.5px; font-weight:500; color:var(--ink); font-variant-numeric:tabular-nums;
+  background:var(--surface); border:1px solid var(--rule-2); border-radius:8px;
+  padding:8px 10px; cursor:text}
+.ctl input.val:hover{border-color:var(--accent)}
+.ctl input.val:focus{border-color:var(--accent); background:var(--surface); outline:none;
+  box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent)}
+.ctl input.val.bad{border-color:var(--crit); color:var(--crit); background:var(--crit-soft)}
+.ctl select.val{display:block; width:100%; font-family:"IBM Plex Mono",monospace;
+  font-size:13px; font-weight:500; color:var(--ink); background:var(--surface);
+  border:1px solid var(--rule-2); border-radius:8px; padding:8px 10px; cursor:pointer}
+.ctl select.val:hover,.ctl select.val:focus{border-color:var(--accent); outline:none;
+  box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent)}
+input[type=range]{width:100%; margin:8px 0 0; accent-color:var(--accent); height:14px; opacity:.75}
+input[type=range]:hover{opacity:1}
+
+.readout{margin-top:14px; padding:0; border:0; background:transparent; box-shadow:none;
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(145px,1fr)); gap:10px}
+.readout .stat{min-height:94px; padding:15px; background:var(--surface); border:1px solid var(--rule);
+  border-radius:13px; box-shadow:0 8px 25px -24px rgba(20,54,58,.65)}
+.stat .k{font-family:"IBM Plex Mono",monospace; font-size:10.5px; letter-spacing:.08em;
+  text-transform:uppercase; color:var(--ink-3); display:block}
+.stat .v{font-family:"IBM Plex Mono",monospace; font-size:19px; font-weight:500;
+  font-variant-numeric:tabular-nums; margin-top:3px; display:block; letter-spacing:-.01em}
+.stat .u{font-size:12px; color:var(--ink-3); font-weight:400}
+.stat .why{display:block; margin-top:7px; padding-top:7px; border-top:1px solid var(--rule);
+  font-size:10.5px; line-height:1.35; color:var(--ink-3)}
+.stat .why b{color:var(--ink-2); font-weight:600}
+.verdict{display:inline-flex; align-items:center; gap:6px; margin-top:5px;
+  font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.04em;
+  padding:3px 8px; border-radius:20px; border:1px solid currentColor}
+.v-ok{color:var(--s3)} .v-warn{color:var(--s2)} .v-bad{color:var(--crit)}
+.scenario-result{margin-top:14px; padding:22px 24px; display:grid;
+  grid-template-columns:minmax(190px,.7fr) minmax(260px,1.3fr); gap:14px 24px;
+  border-left:5px solid var(--rule-2)}
+.scenario-result.pass{border-left-color:var(--s3); background:linear-gradient(120deg,var(--surface),var(--ok-soft))}
+.scenario-result.fail{border-left-color:var(--crit); background:linear-gradient(120deg,var(--surface),var(--crit-soft))}
+.scenario-result .label{font-family:"IBM Plex Mono",monospace; font-size:10.5px;
+  letter-spacing:.09em; text-transform:uppercase; color:var(--ink-3)}
+.scenario-result .headline{font-family:"IBM Plex Serif",Georgia,serif;
+  font-size:clamp(20px,3vw,27px); line-height:1.2; margin-top:4px}
+.scenario-result .detail{font-size:13.5px; color:var(--ink-2); align-self:center}
+.scenario-result .detail b{color:var(--ink)}
+.why-label{display:inline-block; margin-right:6px; padding:2px 7px; border-radius:999px;
+  border:1px solid color-mix(in srgb,var(--accent) 45%,var(--rule)); color:var(--accent);
+  font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase}
+.sensitivity-note{display:block; margin-top:8px; font-size:12px; color:var(--ink-3)}
+@media (max-width:620px){.scenario-result{grid-template-columns:1fr}}
+
+section{margin-top:64px; padding-top:4px; scroll-margin-top:70px}
+.sec-head{display:flex; gap:12px; align-items:baseline; flex-wrap:wrap}
+.stage{font-family:"IBM Plex Mono",monospace; font-size:10.5px; color:var(--accent);
+  letter-spacing:.09em; text-transform:uppercase; flex:none; padding:4px 8px;
+  border:1px solid color-mix(in srgb,var(--accent) 34%,var(--rule)); border-radius:999px;
+  background:color-mix(in srgb,var(--accent) 7%,transparent)}
+h2{font-size:clamp(22px,3vw,28px); font-weight:600; letter-spacing:-.02em}
+.lede{color:var(--ink-2); max-width:68ch; margin:8px 0 0}
+.answer{font-family:"IBM Plex Serif",Georgia,serif; font-size:clamp(17px,2.6vw,20px);
+  line-height:1.45; color:var(--ink); max-width:62ch; margin:14px 0 0}
+.answer em{font-style:italic; color:var(--accent)}
+.eq{margin-top:18px; padding:17px 20px; background:linear-gradient(135deg,var(--surface-2),var(--surface)); border:1px solid var(--rule);
+  border-left:3px solid var(--accent); border-radius:12px; overflow-x:auto}
+.eq math{font-size:17px; color:var(--ink)}
+.eq .note{font-family:"IBM Plex Mono",monospace; font-size:11.5px; color:var(--ink-3); margin-top:8px; display:block}
+figure{margin:20px 0 0; padding:20px 20px 13px}
+figure.panel{border-radius:5px; box-shadow:none; border-color:var(--rule-2); background:var(--surface)}
+figcaption{font-size:13px; color:var(--ink-2); margin-top:10px; padding-top:10px; border-top:1px solid var(--rule)}
+figcaption b{color:var(--ink); font-weight:600}
+.chart{position:relative; width:100%}
+.chart svg{display:block; width:100%; height:auto; overflow:visible}
+.legend{display:flex; gap:16px; flex-wrap:wrap; margin-bottom:8px}
+.legend span{display:inline-flex; align-items:center; gap:6px;
+  font-family:"IBM Plex Mono",monospace; font-size:11.5px; color:var(--ink-2)}
+.swatch{width:14px; height:3px; border-radius:2px; flex:none}
+.swatch.band{height:9px; border:1px solid color-mix(in srgb,var(--s1) 45%,transparent); opacity:.42}
+.tip{position:absolute; pointer-events:none; opacity:0; transform:translate(-50%,-100%);
+  background:var(--surface); border:1px solid var(--rule-2); border-radius:6px; padding:6px 9px;
+  font-family:"IBM Plex Mono",monospace; font-size:11.5px; color:var(--ink); white-space:nowrap;
+  box-shadow:var(--shadow); z-index:5; transition:opacity .1s linear}
+.tip b{color:var(--ink-3); font-weight:400}
+.duty-hero{display:flex; flex-wrap:wrap; align-items:baseline; gap:8px 18px; margin-bottom:6px}
+.duty-hero .big{font-family:"IBM Plex Mono",monospace; font-size:clamp(26px,4.6vw,38px);
+  font-weight:500; letter-spacing:-.02em; color:var(--accent); font-variant-numeric:tabular-nums}
+.duty-hero .cap{font-size:13px; color:var(--ink-2); max-width:42ch}
+
+/* callouts */
+.note-box{margin-top:16px; padding:18px 20px; border-radius:13px; border:1px solid var(--rule);
+  background:var(--surface); display:flex; flex-direction:column; gap:7px}
+.note-box p{margin:0; font-size:13.5px; color:var(--ink-2); max-width:72ch}
+.note-box b{color:var(--ink); font-weight:600}
+.note-box cite{font-style:normal; font-size:12px; color:var(--ink-3); font-family:"IBM Plex Mono",monospace}
+.note-box.warn{background:var(--crit-soft); border-color:var(--crit)}
+.note-box.warn .eyebrow{color:var(--crit)}
+.note-box.warn p{color:var(--ink)}
+.note-box.flagnew{border-top:3px solid var(--accent)}
+.note-box.flagnew .eyebrow{color:var(--accent)}
+.note-box.assume{background:transparent; border:none; border-left:3px solid var(--rule-2);
+  border-radius:0; padding:2px 0 2px 16px}
+.two{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:16px}
+@media (max-width:660px){.two{grid-template-columns:1fr}}
+
+/* tables */
+.tscroll{overflow-x:auto; border:1px solid var(--rule); border-radius:13px; background:var(--surface); margin-top:16px; box-shadow:var(--shadow)}
+table{border-collapse:collapse; width:100%; min-width:420px; font-size:14px}
+th{text-align:left; font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.07em;
+  text-transform:uppercase; color:var(--ink-3); font-weight:500;
+  padding:11px 15px; border-bottom:1px solid var(--rule-2); white-space:nowrap}
+td{padding:10px 15px; border-bottom:1px solid var(--rule); color:var(--ink-2); vertical-align:top}
+tbody tr:last-child td{border-bottom:none}
+td.n,th.n{text-align:right; font-family:"IBM Plex Mono",monospace;
+  font-variant-numeric:tabular-nums; white-space:nowrap}
+td strong{color:var(--ink); font-weight:600}
+tr.hi td{background:var(--band)}
+
+/* scan */
+.scan{display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:16px}
+@media (max-width:760px){.scan{grid-template-columns:1fr}}
+.hm{position:relative}
+.hm canvas{position:absolute; image-rendering:auto; border-radius:3px}
+.hm svg{position:relative; z-index:2}
+.hm h3{font-size:14px; font-weight:600; margin:0 0 2px}
+.hm .hsub{font-size:12px; color:var(--ink-3); margin:0 0 8px}
+.ramp{display:flex; align-items:center; gap:8px; margin-top:8px;
+  font-family:"IBM Plex Mono",monospace; font-size:10.5px; color:var(--ink-3)}
+.ramp .bar{height:9px; flex:1; border-radius:2px; border:1px solid var(--rule)}
+
+/* coverage widget */
+.cov{display:grid; grid-template-columns:1.15fr 1fr; gap:20px; align-items:start}
+@media (max-width:720px){.cov{grid-template-columns:1fr}}
+.cov-stats{display:grid; grid-template-columns:1fr 1fr; gap:14px 12px}
+
+.ask{margin-top:64px; padding:clamp(24px,5vw,42px); border-radius:18px;
+  background:linear-gradient(135deg,#075D62,var(--accent)); color:#fff; display:flex; flex-direction:column; gap:12px;
+  box-shadow:0 22px 50px -32px color-mix(in srgb,var(--accent) 75%,transparent)}
+:root[data-theme="dark"] .ask{background:var(--surface-2); color:var(--ink); border:1px solid var(--rule-2)}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .ask{background:var(--surface-2); color:var(--ink); border:1px solid var(--rule-2)}
+}
+.ask h2{color:inherit; font-size:24px}
+.ask p{color:inherit; opacity:.93; margin:0; max-width:70ch; font-size:15px}
+.ask .eyebrow{color:inherit; opacity:.7}
+.ask code{font-family:"IBM Plex Mono",monospace; font-weight:600}
+
+footer{margin-top:64px; padding:26px 0 8px; border-top:1px solid var(--rule); color:var(--ink-3); font-size:13px; max-width:82ch}
+footer p{margin:0 0 10px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media (max-width:560px){
+  .wrap{padding-inline:12px}
+  header{margin-top:12px; padding:22px 20px; border-radius:16px}
+  h1{font-size:31px; max-width:15ch}
+  nav{margin-top:12px}
+  .controls{padding:16px 14px}
+  .readout{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .readout .stat{padding:12px; min-height:86px; overflow-wrap:anywhere}
+  .stat .v{font-size:16px}
+  .cov-stats{grid-template-columns:1fr 1fr}
+  figure{padding:14px 10px 10px}
+}
+/* Urbanist for interface and figures; MathML keeps the browser's mathematical font. */
+body *:not(math):not(math *){font-family:"Urbanist",system-ui,-apple-system,"Segoe UI",sans-serif!important}
+svg text{font-family:"Urbanist",system-ui,sans-serif!important}
+</style>
+
+<div class="wrap hero-wrap">
+<header>
+  <div class="hero-kicker"><span class="hero-dot"></span>Interactive mechanistic model</div>
+  <h1>EAB Sensor Validation Workbench</h1>
+  <p class="sub">Trace one parameter set through the complete measurement chain: surface delivery, reversible binding, reporter transduction, detection, and dynamic fidelity. <b>Every result updates live from the controls below.</b></p>
+  <p class="sub" style="font-size:14px"><b>A conditional scenario explorer—not a universal feasibility verdict.</b> “Threshold crossed” means only that the selected model and assumptions predict a 3σ equilibrium response.</p>
+  <p class="seed">Starts with the illustrative 10 pM target / 36 nM affinity case. Type a value and press Enter, or drag a slider to explore another scenario.</p>
+</header>
+</div>
+
+<nav><div class="inner">
+  <a href="#params">Parameters</a>
+  <a href="#density">01 · More aptamer?</a>
+  <a href="#flow">02 · Faster flow?</a>
+  <a href="#bind">03 · How much binds</a>
+  <a href="#time">04 · How long</a>
+  <a href="#signal">05 · Does it become current?</a>
+  <a href="#see">06 · Can you see it</a>
+  <a href="#scan">07 · What affinity is needed</a>
+  <a href="#fast">08 · How fast it can follow</a>
+  <a href="#ask">Next experiment</a>
+</div></nav>
+
+<div class="wrap">
+
+<div class="panel controls" id="params">
+  <div class="controls-head">
+    <span class="eyebrow">Parameters</span>
+    <div class="presets">
+      <button class="chip" data-preset="baseline">Original 10 pM / 36 nM case</button>
+      <button class="chip" data-preset="tight">High-affinity candidate</button>
+      <button class="chip" data-preset="pumped">Pumped chamber</button>
+      <button class="chip" data-preset="passive">Passive supply</button>
+      <button class="chip" id="reset">Reset</button>
+    </div>
+  </div>
+  <div class="grid-ctl" id="ctls"></div>
+</div>
+
+<div class="panel readout" id="readout"></div>
+<div class="panel scenario-result" id="scenario-result"></div>
+
+<!-- ============================ 01 ============================ -->
+<section id="density">
+  <div class="sec-head"><span class="stage">Question 01</span><h2>Does more aptamer catch more target?</h2></div>
+  <p class="answer" id="a-density"></p>
+  <p class="lede">Two separate reasons, and they are worth keeping apart. The first is about <em>capture</em>: past a certain density the layer already catches everything diffusion delivers. The second is about <em>signal</em>: occupancy is a fraction, and a fraction has no density in it.</p>
+
+  <div class="eq">
+    <math display="block"><mrow><msup><mi>Γ</mi><mo>*</mo></msup><mo>=</mo><mfrac><msub><mi>k</mi><mi>m</mi></msub><mrow><mn>4</mn><mi>D</mi><msub><mi>r</mi><mi>z</mi></msub></mrow></mfrac><mo>,</mo><mspace width="1.6em"></mspace><msub><mi>θ</mi><mi>eq</mi></msub><mo>=</mo><mfrac><msub><mi>C</mi><mi>s</mi></msub><mrow><msub><mi>K</mi><mi>D</mi></msub><mo>+</mo><msub><mi>C</mi><mi>s</mi></msub></mrow></mfrac></mrow></math>
+    <math display="block"><mrow><msub><mi>Γ</mi><mi>acc</mi></msub><mo>=</mo><msub><mi>f</mi><mi>acc</mi></msub><mi>Γ</mi><mo>,</mo><mspace width="1.2em"></mspace><mi>d</mi><mo>≈</mo><msup><mi>Γ</mi><mrow><mo>−</mo><mn>1</mn><mo>/</mo><mn>2</mn></mrow></msup><mo>,</mo><mspace width="1.2em"></mspace><msub><mi>d</mi><mi>acc</mi></msub><mo>≈</mo><msup><mrow><mo>(</mo><msub><mi>f</mi><mi>acc</mi></msub><mi>Γ</mi><mo>)</mo></mrow><mrow><mo>−</mo><mn>1</mn><mo>/</mo><mn>2</mn></mrow></msup><mo>,</mo><mspace width="1.2em"></mspace><mi>ϕ</mi><mo>=</mo><mi>Γ</mi><mi>π</mi><msup><mrow><mo>(</mo><msub><mi>d</mi><mi>p</mi></msub><mo>/</mo><mn>2</mn><mo>)</mo></mrow><mn>2</mn></msup></mrow></math>
+    <span class="note">Γ* is the Berg–Purcell capture crossover. Γacc corrects the physical tether density by the independently estimated accessible fraction. Spacing and geometric coverage use the physical density and footprint diameter dₚ.</span>
+  </div>
+
+  <figure class="panel">
+    <div class="cov">
+      <div class="chart" id="c-cov"></div>
+      <div>
+        <p class="eyebrow" style="margin-bottom:10px">What that density looks like</p>
+        <div class="cov-stats" id="cov-stats"></div>
+        <p style="font-size:13px;color:var(--ink-2);margin-top:14px" id="cov-note"></p>
+      </div>
+    </div>
+    <figcaption id="f-cov"></figcaption>
+  </figure>
+
+  <div class="two">
+    <div class="note-box">
+      <span class="eyebrow">Why capture saturates so early</span>
+      <p>A molecule reaching the near-surface region can make repeated diffusive encounters before escaping. Consequently, capture may approach an absorbing-boundary limit before binding pockets occupy a large geometric area. The crossover shown here is a scaling estimate, not a universal density threshold.</p>
+      <cite>Berg &amp; Purcell 1977 — a 1 µm cell needs ~3,000 receptors, 0.08% of its surface.</cite>
+    </div>
+    <div class="note-box">
+      <span class="eyebrow">Independent check</span>
+      <p>SPR and BLI keep immobilisation density deliberately <b>low</b>, for exactly this reason: <em>“Low flow rates and high immobilization levels can cause mass transport limitation.”</em> The remedy they recommend — immobilise less, flow faster — is the one this model reaches independently.</p>
+      <cite>Sartorius Octet applications guide, Figs 42–43</cite>
+    </div>
+  </div>
+
+  <div class="note-box assume">
+    <span class="eyebrow">Where this answer stops being true</span>
+    <p>Only at equilibrium, in an <b>open</b> cell. In a closed-chamber (limited-volume) read the per-cycle signal is Δf ≅ (H/Γ)(C − K<sub>D</sub>f<sub>init</sub>): sensitivity falls as 1/Γ while speed rises as Γ, so density becomes a first-order design variable with a real optimum. See question 08. <b>Say “at equilibrium, in an open cell” rather than flatly “no”.</b></p>
+  </div>
+  <p class="lede" style="font-size:13.5px;color:var(--ink-3);margin-top:14px">Density can also change apparent affinity, but its sign is system-specific. Daniel 2013 found K<sub>D</sub><sup>surf</sup> = 3.14 − 0.30σ nM for a large, multivalent thrombin target: denser grafting produced <em>tighter</em> apparent binding through cooperative interactions. That sign must not be transferred to a small-molecule sensor; crowding can instead reduce folding and accessibility.</p>
+</section>
+
+<!-- ============================ 02 ============================ -->
+<section id="flow">
+  <div class="sec-head"><span class="stage">Question 02</span><h2>Would faster flow help?</h2></div>
+  <p class="answer" id="a-flow"></p>
+  <p class="lede">Transport and surface reaction act as resistances in series. Their ratio is the Damköhler number, and it decides whether a better flow cell can change anything at all.</p>
+  <div class="eq">
+    <math display="block"><mrow><mfrac><mn>1</mn><msub><mi>k</mi><mi>eff</mi></msub></mfrac><mo>=</mo><mfrac><mn>1</mn><msub><mi>k</mi><mi>m</mi></msub></mfrac><mo>+</mo><mfrac><mn>1</mn><mrow><msub><mi>k</mi><mi>on</mi></msub><msub><mi>Γ</mi><mi>T</mi></msub></mrow></mfrac><mo>,</mo><mspace width="1.4em"></mspace><mfrac><msub><mi>C</mi><mi>s</mi></msub><msub><mi>C</mi><mi>b</mi></msub></mfrac><mo>=</mo><mfrac><mn>1</mn><mrow><mn>1</mn><mo>+</mo><msub><mi>Da</mi><mi>m</mi></msub></mrow></mfrac><mo>,</mo><mspace width="1.4em"></mspace><msub><mover><mi>k</mi><mo>‾</mo></mover><mi>m</mi></msub><mo>=</mo><mn>0.807</mn><msup><mrow><mo>(</mo><msup><mi>D</mi><mn>2</mn></msup><mover><mi>γ</mi><mo>˙</mo></mover><mo>/</mo><mi>L</mi><mo>)</mo></mrow><mrow><mn>1</mn><mo>/</mo><mn>3</mn></mrow></msup></mrow></math>
+    <span class="note">Length-averaged Lévêque, γ̇ = 6U/h, developed laminar flow between parallel plates. Initial-rate result (θ ≪ 1).</span>
+  </div>
+  <figure class="panel"><div class="chart" id="c-flow"></div><figcaption id="f-flow"></figcaption></figure>
+  <figure class="panel"><div class="chart" id="c-regime"></div><figcaption id="f-regime"></figcaption></figure>
+
+  <div class="note-box warn">
+    <span class="eyebrow">Load-bearing assumption — the one that would break this argument</span>
+    <p>C<sub>s</sub>/C<sub>b</sub> = 1/(1+Da<sub>m</sub>) assumes a <b>net flux</b>. It is an initial-rate result. Set dθ/dt = 0 in the full two-compartment model and k<sub>m</sub> <b>cancels algebraically</b>, leaving θ = C<sub>free</sub>/(K<sub>D</sub>+C<sub>free</sub>). At equilibrium nothing is being consumed, so there is no spatial gradient and C<sub>s</sub> → C<sub>b</sub> whatever the flow rate. In an open cell C<sub>free</sub> is maintained at the inlet concentration; in a sealed finite chamber it is found by conserving the total analyte. Transport dropping out of the equilibrium answer is not an assumption we made — it falls out of the general model.</p>
+  </div>
+  <p class="lede" style="font-size:13.5px;color:var(--ink-3);margin-top:14px">In a passively supplied device, the source flux sets the exchange rate. A pump cannot be credited in a configuration whose sample supply cannot sustain that flow.</p>
+</section>
+
+<!-- ============================ 03 ============================ -->
+<section id="bind">
+  <div class="sec-head"><span class="stage">Question 03</span><h2>How much actually binds</h2></div>
+  <p class="lede">At equilibrium, a receptor responds to affinity and the <em>free</em> concentration at the surface. In an open reservoir that concentration is maintained and geometry drops out. In a sealed finite chamber, geometry re-enters through receptor capacity because binding lowers the free concentration.</p>
+  <figure class="panel"><div class="chart" id="c-iso"></div><figcaption id="f-iso"></figcaption></figure>
+
+  <div class="sec-head" style="margin-top:34px"><span class="stage">the same thing, from one molecule's view</span></div>
+  <p class="lede">A receptor does not catch a target and keep it. Watch one for a long time: it spends most of its life empty, and occasionally holds a target for a while. Occupancy is just that duty cycle.</p>
+  <div class="eq">
+    <math display="block"><mrow><mi>θ</mi><mo>=</mo><mfrac><msub><mi>τ</mi><mi>bound</mi></msub><mrow><msub><mi>τ</mi><mi>bound</mi></msub><mo>+</mo><msub><mi>τ</mi><mi>free</mi></msub></mrow></mfrac><mo>,</mo><mspace width="1.2em"></mspace><msub><mi>τ</mi><mi>bound</mi></msub><mo>=</mo><mfrac><mn>1</mn><msub><mi>k</mi><mi>off</mi></msub></mfrac><mo>,</mo><mspace width="0.8em"></mspace><msub><mi>τ</mi><mi>free</mi></msub><mo>=</mo><mfrac><mn>1</mn><mrow><msub><mi>k</mi><mi>on</mi></msub><mi>C</mi></mrow></mfrac></mrow></math>
+    <span class="note">Identical to C_free/(K_D + C_free). Both dwell times scale as 1/k_on, so their ratio — and therefore θ at a specified free concentration — cannot depend on k_on.</span>
+  </div>
+  <figure class="panel">
+    <div class="duty-hero"><span class="big" id="duty-big"></span><span class="cap" id="duty-cap"></span></div>
+    <div class="chart" id="c-duty"></div><figcaption id="f-duty"></figcaption>
+  </figure>
+</section>
+
+<!-- ============================ 04 ============================ -->
+<section id="time">
+  <div class="sec-head"><span class="stage">Question 04</span><h2>How long it takes to get there</h2></div>
+  <p class="lede">With maintained concentration, k<sub>obs</sub> = k<sub>on</sub>C + k<sub>off</sub>; below K<sub>D</sub>, k<sub>obs</sub> approaches k<sub>off</sub>. A sealed finite chamber is different: binding changes the free concentration, so the workbench uses the exact mass-conserving two-body solution.</p>
+  <div class="eq">
+    <math display="block"><mrow><mi>θ</mi><mo>(</mo><mi>t</mi><mo>)</mo><mo>=</mo><msub><mi>θ</mi><mi>eq</mi></msub><mo>[</mo><mn>1</mn><mo>−</mo><msup><mi>e</mi><mrow><mo>−</mo><msub><mi>k</mi><mi>obs</mi></msub><mi>t</mi></mrow></msup><mo>]</mo><mo>,</mo><mspace width="1.2em"></mspace><msub><mi>L</mi><mi>eq</mi></msub><mo>=</mo><mfrac><msub><mi>Γ</mi><mi>max</mi></msub><mrow><mi>C</mi><mo>+</mo><msub><mi>K</mi><mi>D</mi></msub></mrow></mfrac></mrow></math>
+    <span class="note">The monoexponential θ(t) expression assumes maintained concentration. L_eq is a useful inventory scale; the closed-chamber curve instead uses the exact mass-conserving solution.</span>
+  </div>
+  <figure class="panel"><div class="chart" id="c-kin"></div><figcaption id="f-kin"></figcaption></figure>
+</section>
+
+<!-- ============================ 05 transduction ============================ -->
+<section id="signal">
+  <div class="sec-head"><span class="stage">Question 05</span><h2>Does occupancy actually become current?</h2></div>
+  <p class="answer" id="a-signal"></p>
+
+  <div class="note-box warn">
+    <span class="eyebrow">Read this before the rest of the section</span>
+    <p>The gain G and the two currents I<sub>U</sub>(f), I<sub>B</sub>(f) are inputs rather than predictions. They depend on how the reporter's distance distribution and interfacial environment respond to binding, which this model does not derive. The calculations below therefore show conditional outcomes for an assumed or measured gain.</p>
+    <p><b>A measured gain can have more than one physical contribution.</b> With ln(k′/k) = −(βΔr + rΔβ), one current measurement does not uniquely separate reporter displacement from a change in tunnelling environment. Controls such as a scrambled sequence with the same backfill help test whether the response is binding-specific, but should be interpreted with the rest of the control set.</p>
+  </div>
+
+  <div class="eq">
+    <math display="block"><mrow><mi>I</mi><mo>(</mo><mi>f</mi><mo>,</mo><mi>t</mi><mo>)</mo><mo>=</mo><mo>[</mo><mn>1</mn><mo>&#8722;</mo><mi>&#952;</mi><mo>]</mo><msub><mi>I</mi><mi>U</mi></msub><mo>(</mo><mi>f</mi><mo>)</mo><mo>+</mo><mi>&#952;</mi><msub><mi>I</mi><mi>B</mi></msub><mo>(</mo><mi>f</mi><mo>)</mo><mo>,</mo><mspace width="1.4em"></mspace><mfrac><mrow><mi>&#916;</mi><mi>I</mi></mrow><mi>I</mi></mfrac><mo>=</mo><mi>&#952;</mi><mo>&#183;</mo><mi>G</mi></mrow></math>
+    <span class="note">The linear mixture. It assumes I_U and I_B are fixed — that neither depends on concentration. Question 05.3 is where that breaks.</span>
+  </div>
+
+  <div class="two">
+    <div class="note-box">
+      <span class="eyebrow">The gain you assume</span>
+      <p style="font-size:22px;font-family:'IBM Plex Mono',monospace;color:var(--accent)" id="g-have"></p>
+      <p id="g-have-note"></p>
+    </div>
+    <div class="note-box">
+      <span class="eyebrow">The gain you would need</span>
+      <p style="font-size:22px;font-family:'IBM Plex Mono',monospace" id="g-need"></p>
+      <p id="g-need-note"></p>
+    </div>
+  </div>
+
+  <div class="sec-head" style="margin-top:34px"><span class="stage">05.1</span><h2>Is it even the right kind of sensor?</h2></div>
+  <p class="lede">Before interpreting any gain, check what the current is coming from. A tethered reporter and a species diffusing in from solution obey different scan-rate laws, and the exponent is the cheapest diagnostic you have.</p>
+  <figure class="panel"><div class="chart" id="c-nu"></div><figcaption id="f-nu"></figcaption></figure>
+
+  <div class="sec-head" style="margin-top:34px"><span class="stage">05.2</span><h2>Frequency selects a timescale</h2></div>
+  <p class="lede">The reporter is on a leash. It does not sit at one distance — it samples a whole distribution, many times, within a single pulse. Which electron-transfer rates the measurement is sensitive to is set by how long that pulse lasts.</p>
+  <figure class="panel"><div class="chart" id="c-leash"></div><figcaption id="f-leash"></figcaption></figure>
+
+  <div class="sec-head" style="margin-top:34px"><span class="stage">05.3</span><h2>Why a good fit is not evidence</h2></div>
+  <p class="lede">Electron transfer falls exponentially with distance, so the tunnelling <em>medium</em> matters as much as the geometry. If analyte partitions into the monolayer it changes &#946; — and that alone moves the current, with no conformational change at all.</p>
+  <div class="eq">
+    <math display="block"><mrow><msub><mi>k</mi><mi>ET</mi></msub><mo>(</mo><mi>r</mi><mo>)</mo><mo>=</mo><msub><mi>k</mi><mn>0</mn></msub><msup><mi>e</mi><mrow><mo>&#8722;</mo><mi>&#946;</mi><mi>r</mi></mrow></msup><mo>,</mo><mspace width="1.4em"></mspace><mfrac><mrow><mi>&#948;</mi><msub><mi>k</mi><mi>ET</mi></msub></mrow><msub><mi>k</mi><mi>ET</mi></msub></mfrac><mo>=</mo><mo>&#8722;</mo><mi>r</mi><mspace width="0.2em"></mspace><mi>&#948;</mi><mi>&#946;</mi></mrow></math>
+    <span class="note">&#946; &#8776; 1 &#197;&#8315;&#185; for a saturated alkane chain. The reporter sits at r &#8776; 10 &#197;.</span>
+  </div>
+  <figure class="panel"><div class="chart" id="c-beta"></div><figcaption id="f-beta"></figcaption></figure>
+
+  <div class="eq">
+    <math display="block"><mrow><msub><mi>k</mi><mi>obs</mi></msub><mo>=</mo><msup><mi>k</mi><mn>0</mn></msup><mo>⟨</mo><msup><mi>e</mi><mrow><mo>−</mo><mi>β</mi><mi>r</mi></mrow></msup><mo>⟩</mo><mo>,</mo><mspace width="1.2em"></mspace><mi>p</mi><mo>(</mo><mi>r</mi><mo>)</mo><mo>=</mo><mi>𝒩</mi><mo>(</mo><mi>μ</mi><mo>,</mo><msup><mi>s</mi><mn>2</mn></msup><mo>)</mo><mo>⇒</mo><mfrac><msub><mi>k</mi><mi>B</mi></msub><msub><mi>k</mi><mi>U</mi></msub></mfrac><mo>=</mo><mi>exp</mi><mo>[</mo><mo>−</mo><mi>β</mi><mi>Δμ</mi><mo>+</mo><mfrac><msup><mi>β</mi><mn>2</mn></msup><mn>2</mn></mfrac><mi>Δ</mi><mo>(</mo><msup><mi>s</mi><mn>2</mn></msup><mo>)</mo><mo>]</mo></mrow></math>
+    <math display="block"><mrow><msub><mi>Δμ</mi><mi>equiv</mi></msub><mo>=</mo><mfrac><mi>β</mi><mn>2</mn></mfrac><mi>Δ</mi><mo>(</mo><msup><mi>s</mi><mn>2</mn></msup><mo>)</mo></mrow></math>
+    <span class="note">Average the exponential over the reporter-distance distribution—not the distance before exponentiating. Δμ = μB − μU and Δ(s²) = sB² − sU². The Gaussian closed form assumes the same β and k⁰ in both states and a distribution not strongly truncated by electrode contact.</span>
+  </div>
+  <div class="note-box flagnew">
+    <span class="eyebrow">The variance result: a testable resolution of the Å/nm mismatch</span>
+    <p>The mean-distance term is linear in β, whereas the variance term is quadratic. At β = 1 Å⁻¹, widening a Gaussian distribution from s = 3.0 to 3.2 Å is equivalent, in the averaged rate, to a 0.62 Å shift of its mean—even though the width changed by only 0.2 Å. That example gives a 1.86× rate factor; larger width changes are exponentially amplified without requiring the reporter's mean position to move by nanometres.</p>
+    <p>Broadening also adds probability to both the close, fast-transfer tail and the far, slow-transfer tail. When square-wave frequency selects different rate windows, that mechanism can produce opposite response signs. The reported +315% at 750 Hz and −82% at 20 Hz are therefore a validation target for the distribution model, not magnitudes predicted by the Gaussian equation alone. A quantitative prediction requires the measured or simulated p<sub>U</sub>(r) and p<sub>B</sub>(r), the pulse-response model, and checks that β and k⁰ remain state-independent.</p>
+  </div>
+
+  <div class="sec-head" style="margin-top:34px"><span class="stage">05.4</span><h2>Does the two-frequency trick actually help?</h2></div>
+  <p class="lede">KDM subtracts the relative response at two frequencies. Correlated drift cancels; uncorrelated noise adds in quadrature. Whether that is a net win depends on one number almost nobody reports.</p>
+  <div class="eq">
+    <math display="block"><mrow><msub><mi>S</mi><mi>diff</mi></msub><mo>=</mo><msub><mi>S</mi><mn>1</mn></msub><mo>&#8722;</mo><msub><mi>S</mi><mn>2</mn></msub><mo>,</mo><mspace width="1.2em"></mspace><mi>Var</mi><mo>=</mo><msubsup><mi>&#963;</mi><mn>1</mn><mn>2</mn></msubsup><mo>+</mo><msubsup><mi>&#963;</mi><mn>2</mn><mn>2</mn></msubsup><mo>&#8722;</mo><mn>2</mn><mi>&#961;</mi><msub><mi>&#963;</mi><mn>1</mn></msub><msub><mi>&#963;</mi><mn>2</mn></msub><mspace width="1.6em"></mspace><mo>&#8658;</mo><mspace width="0.6em"></mspace><mfrac><msub><mi>&#963;</mi><mi>diff</mi></msub><mi>&#963;</mi></mfrac><mo>=</mo><msqrt><mrow><mn>2</mn><mo>(</mo><mn>1</mn><mo>&#8722;</mo><mi>&#961;</mi><mo>)</mo></mrow></msqrt></mrow></math>
+    <span class="note">Equal noise at both frequencies. The signal-only view is optimistic; the noise-only view is pessimistic. Both are drawn below.</span>
+  </div>
+  <figure class="panel"><div class="chart" id="c-kdm"></div><figcaption id="f-kdm"></figcaption></figure>
+
+  <div class="sec-head" style="margin-top:34px"><span class="stage">05.5</span><h2>When electrochemical readout may be preferable to a FET</h2></div>
+  <p class="lede">A field-effect readout senses charge only within a Debye length of the gate. The binding pocket does not sit on the surface &#8212; it sits several nanometres up, on a flexible tether.</p>
+  <figure class="panel"><div class="chart" id="c-debye"></div><figcaption id="f-debye"></figcaption></figure>
+</section>
+
+<!-- ============================ 06 ============================ -->
+<section id="see">
+  <div class="sec-head"><span class="stage">Question 06</span><h2>So what decides whether you can see it?</h2></div>
+  <p class="answer" id="a-see"></p>
+  <div class="eq">
+    <math display="block"><mrow><mfrac><mrow><mi>Δ</mi><mi>S</mi></mrow><mi>S</mi></mfrac><mo>=</mo><mi>θ</mi><mo>·</mo><mi>G</mi><mo>,</mo><mspace width="1.2em"></mspace><msub><mi>θ</mi><mi>thr</mi></msub><mo>=</mo><mfrac><mrow><mn>3</mn><mi>σ</mi></mrow><mi>G</mi></mfrac><mo>,</mo><mspace width="1.2em"></mspace><msubsup><mi>C</mi><mi>LOD</mi><mi>open</mi></msubsup><mo>=</mo><msub><mi>K</mi><mi>D</mi></msub><mfrac><msub><mi>θ</mi><mi>thr</mi></msub><mrow><mn>1</mn><mo>−</mo><msub><mi>θ</mi><mi>thr</mi></msub></mrow></mfrac><mo>,</mo><mspace width="1.2em"></mspace><msubsup><mi>C</mi><mi>LOD</mi><mi>closed</mi></msubsup><mo>=</mo><msubsup><mi>C</mi><mi>LOD</mi><mi>open</mi></msubsup><mo>+</mo><msub><mi>R</mi><mi>T</mi></msub><msub><mi>θ</mi><mi>thr</mi></msub></mrow></math>
+    <span class="note">The closed-chamber term is analyte consumed by the receptor layer. Signal proportional to occupancy is a useful first model, not a universal law.</span>
+  </div>
+  <figure class="panel"><div class="chart" id="c-sig"></div><figcaption id="f-sig"></figcaption></figure>
+  <div class="tscroll"><table id="t-ceil"></table></div>
+  <p class="lede" style="font-size:13.5px;color:var(--ink-3);margin-top:14px">The open expression holds at equilibrium with maintained concentration. The closed expression additionally conserves the finite analyte inventory. Read <em>before</em> equilibrium, or track a changing signal, and transport returns through response time and bandwidth. That is question 08.</p>
+</section>
+
+<!-- ============================ 06 ============================ -->
+<section id="scan">
+  <div class="sec-head"><span class="stage">Question 07</span><h2>What affinity would we actually need?</h2></div>
+  <p class="lede">The two panels below share one grid and the selected sample boundary. <b>Equilibrium occupancy is flat in k<sub>on</sub>; response time is not.</b> In a maintained-concentration measurement K<sub>D</sub> sets occupancy. In a finite closed chamber, receptor capacity also consumes analyte and shifts the requirement.</p>
+  <div class="scan">
+    <figure class="panel" style="margin:0">
+      <h3>Occupancy θ</h3><p class="hsub">contours vertical — θ depends on K<sub>D</sub> only</p>
+      <div class="chart hm" id="hm-theta"></div>
+      <div class="ramp"><span id="r1lo"></span><div class="bar" id="r1bar"></div><span id="r1hi"></span></div>
+    </figure>
+    <figure class="panel" style="margin:0">
+      <h3>Response time t<sub>90</sub></h3><p class="hsub">same axes, strongly diagonal</p>
+      <div class="chart hm" id="hm-t90"></div>
+      <div class="ramp"><span id="r2lo"></span><div class="bar" id="r2bar"></div><span id="r2hi"></span></div>
+    </figure>
+  </div>
+  <figure class="panel"><div class="chart" id="c-req"></div><figcaption id="f-req"></figcaption></figure>
+  <div class="tscroll"><table id="t-req"></table></div>
+</section>
+
+<!-- ============================ 07 ============================ -->
+<section id="fast">
+  <div class="sec-head"><span class="stage">Question 08</span><h2>How fast a change can it follow?</h2></div>
+  <p class="answer" id="a-fast"></p>
+  <p class="lede">Everything above asks <em>how little</em>. A continuous sensor also has to answer <em>how fast</em>, and that is a different calculation with different governing parameters. The sensor behaves as a <b>low-pass filter</b>: it reproduces slow changes, attenuates and phase-lags fast ones, and has a cutoff frequency computable before anything is built.</p>
+  <div class="eq">
+    <math display="block"><mrow><msub><mi>τ</mi><mi>D</mi></msub><mo>=</mo><mfrac><msup><mi>H</mi><mn>2</mn></msup><mi>D</mi></mfrac><mo>,</mo><mspace width="1em"></mspace><msub><mi>τ</mi><mi>R</mi></msub><mo>=</mo><mfrac><mn>1</mn><mrow><msub><mi>k</mi><mi>on</mi></msub><mi>C</mi><mo>+</mo><msub><mi>k</mi><mi>off</mi></msub></mrow></mfrac><mo>,</mo><mspace width="1em"></mspace><msub><mi>τ</mi><mi>A</mi></msub><mo>=</mo><mfrac><mi>V</mi><mi>Q</mi></mfrac><mspace width="1.6em"></mspace><mfrac><mn>1</mn><msub><mi>f</mi><mi>c</mi></msub></mfrac><mo>=</mo><munder><mo>∑</mo><mi>i</mi></munder><mfrac><mn>1</mn><msubsup><mi>f</mi><mi>c</mi><mi>i</mi></msubsup></mfrac></mrow></math>
+    <span class="note">The displayed τ_R equation is the maintained-concentration branch. In finite / sealed mode the calculation uses the exact closed-system linear relaxation time, τ_R = 1/[k_on√((R_T+C+K_D)²−4R_TC)]. f_c^D ≈ 0.65/τ_D, f_c^R ≈ 0.27/τ_R, f_c^A ≈ 0.39/τ_A. Cutoff is defined at 50% amplitude; the prefactors and series interpolation remain model-dependent.</span>
+  </div>
+  <figure class="panel"><div class="chart" id="c-lag"></div><figcaption id="f-lag"></figcaption></figure>
+
+  <div class="note-box flagnew">
+    <span class="eyebrow">The off-rate floor is a property of the valve, not the aptamer</span>
+    <p>It is standard to say that 1/k<sub>off</sub> is a floor on response time that no geometry beats. <b>That holds only for an open cell</b>, where the analyte is continuously resupplied, so the surface can relax only by letting complexes fall apart.</p>
+    <p>In the low-analyte limited-volume approximation, closing the chamber makes depletion part of the transient. The characteristic clock becomes τ<sub>R,LV</sub> ≈ 1/(k<sub>on</sub>C<sub>b,0</sub>) with C<sub>b,0</sub> = Γ/H. In that regime the approximate speed ratio α = Γ/(H·K<sub>D</sub>) increases as affinity tightens. Whether an immobilized device realizes this behavior must be checked against the full mass balance and experiment.</p>
+    <p id="lv-live"></p>
+    <cite>Lubken, Bergkamp, de Jong &amp; Prins, ACS Sens. 2021, 6, 4471–4481.</cite>
+  </div>
+
+  <div class="note-box warn">
+    <span class="eyebrow">The linearised speed–signal tradeoff</span>
+    <p>Within the low-analyte derivation, per-cycle sensitivity scales as H/Γ and the speed ratio as Γ/(H·K<sub>D</sub>), giving <b>Δf · α ≈ C / K<sub>D</sub></b>. This invariant is useful for exploring the idealized tradeoff; departures are expected when occupancy is not small or the surface kinetics and sample exchange violate the model assumptions.</p>
+    <p id="lv-cost"></p>
+    <p style="font-size:12.5px;opacity:.85">Two further caveats before using this mode: it has been demonstrated with binders free in solution rather than every possible immobilised construct, and a low passive supply flux can make the exchange phase dominate the cycle. Validate both the surface implementation and sample-replacement step experimentally.</p>
+  </div>
+</section>
+
+<!-- ============================ ask ============================ -->
+<section class="ask" id="ask">
+  <span class="eyebrow">Reducing uncertainty</span>
+  <h2>Which measurement would most improve this scenario?</h2>
+  <p id="ask-live"></p>
+  <p>Target concentration is one high-impact uncertainty because it enters the affinity requirement directly. Surface K<sub>D</sub>, k<sub>on</sub>, gain, blank variability, and accessible probe density may be equally important depending on the selected parameter set.</p>
+</section>
+
+<footer>
+  <p><b>Model and its limits.</b> The sample-boundary selector determines the equilibrium model independently of flow: “maintained” fixes the reservoir concentration, while “finite / sealed” conserves the chamber inventory. Chamber inventory uses the cylindrical volume V = πr<sub>ch</sub>²H, whereas the flow estimate treats the sensing region as a parallel-plate channel of width 2r<sub>we</sub>; this mixed geometry is a deliberate reduced-order approximation, not a single exact flow-cell geometry. k<sub>m</sub> uses a characteristic film estimate D/h without forced flow — a sealed transient chamber has no single steady k<sub>m</sub>, so that branch is a scaling estimate, not a prediction — and the length-averaged Lévêque form 0.807(D²γ̇/L)<sup>1/3</sup> with γ̇ = 6U/h under flow. Treat both as order-of-magnitude. C<sub>s</sub>/C<sub>b</sub> = 1/(1+Da<sub>m</sub>) holds only during unsaturated association; at true equilibrium the net flux vanishes and C<sub>s</sub> = C<sub>b</sub>. Assumes 1:1 reversible binding, a homogeneous accessible receptor population, and no non-specific adsorption.</p>
+  <p><b>On K<sub>D</sub>.</b> The K<sub>D</sub> here is a thermodynamic constant. A value fitted from square-wave voltammetry is an apparent EC<sub>50</sub> and may differ from it; immobilisation can shift it again. A measured surface affinity under the intended assay conditions gives the model a stronger basis than a solution-selection value.</p>
+  <p><b>Sources for the dynamic model.</b> Lubken, de Jong &amp; Prins, ACS Sens. 2022, 7, 286–295 (filter framework and limit of concentration-change rate); Lubken, Bergkamp, de Jong &amp; Prins, ACS Sens. 2021, 6, 4471–4481 (limited-volume assay). Both use idealized noise models; drift, fouling and probe loss remain outside the calculation. The Δf·α invariant is derived from their governing equation rather than quoted as a published result.</p>
+</footer>
+</div>
+
+<script>
+const NA=6.022e23;
+const P={ mode:'closed', C:1e-11, KD:36e-9, kon:1e5, gam:1e12, facc:0.60, fp:3, D:4.9e-10, h:1.5e-3,
+          rwe:2e-3, rch:5e-3, Q:0, G:300, sig:2, q:0.5,
+          f:750, rho:0.7, I:0.165, sens:0.25 };
+
+const CTL=[
+  {k:'C',   name:'Target concentration', log:1, min:1e-15, max:1e-5, fmt:v=>sci(v,'M')},
+  {k:'KD',  name:'K_D',                  log:1, min:1e-12, max:1e-5, fmt:v=>sci(v,'M')},
+  {k:'kon', name:'k_on',                 log:1, min:1e3,   max:1e8,  fmt:v=>expo(v,'M⁻¹s⁻¹')},
+  {k:'gam', name:'Receptor density',     log:1, min:1e9,   max:1e13, fmt:v=>expo(v,'cm⁻²')},
+  {k:'facc',name:'Accessible fraction',  log:0, min:0.05,  max:1,    fmt:v=>(100*v).toFixed(0)+' %', percent:1},
+  {k:'fp',  name:'Physical footprint',   log:0, min:1,     max:10,   fmt:v=>v.toFixed(2)+' nm'},
+  {k:'D',   name:'Diffusion coeff.',     log:1, min:1e-12, max:1e-8, fmt:v=>expo(v,'m²/s')},
+  {k:'h',   name:'Chamber height',       log:0, min:0.05e-3,max:5e-3, fmt:v=>(v*1e3).toFixed(2)+' mm', scale:1e-3},
+  {k:'rwe', name:'Sensor radius',        log:0, min:0.05e-3,max:5e-3,fmt:v=>(v*1e3).toFixed(2)+' mm', scale:1e-3},
+  {k:'rch', name:'Chamber radius',       log:0, min:0.5e-3,max:15e-3,fmt:v=>(v*1e3).toFixed(1)+' mm', scale:1e-3},
+  {k:'Q',   name:'Flow rate',            log:0, min:0,     max:500,  fmt:v=>v===0?'static':v.toFixed(1)+' µL/min', rawUnit:1},
+  {k:'q',   name:'Passive supply flux',  log:0, min:0.02,  max:2,    fmt:v=>v.toFixed(2)+' µL/min/cm²', rawUnit:1},
+  {k:'f',   name:'SWV frequency',        log:1, min:1,     max:2000, fmt:v=>v.toFixed(0)+' Hz'},
+  {k:'rho', name:'Drift correlation \u03c1', log:0, min:0,     max:0.98, fmt:v=>v.toFixed(2)},
+  {k:'I',   name:'Ionic strength',       log:1, min:1e-3,  max:1,    fmt:v=>v<1?(v*1000).toPrecision(3)+' mM':v.toPrecision(3)+' M'},
+  {k:'G',   name:'Signal gain',          log:0, min:10,    max:3000, fmt:v=>v.toFixed(0)+' %'},
+  {k:'sig', name:'Blank σ',              log:0, min:0.05,  max:10,   fmt:v=>v.toFixed(2)+' %'}
+];
+const PRESETS={
+  baseline:{mode:'closed',C:1e-11, KD:36e-9,  kon:1e5, gam:1e12, facc:0.60, fp:3, h:1.5e-3, Q:0,   G:300, sig:2},
+  tight:   {mode:'closed',C:1e-11, KD:100e-12,kon:1e5, gam:5e11, facc:0.75, fp:3, h:0.2e-3, Q:0,   G:300, sig:2},
+  pumped:  {mode:'open',  C:1e-9,  KD:10e-9,  kon:1e5, gam:5e11, facc:0.70, fp:3, h:0.2e-3, Q:250, G:150, sig:1},
+  passive: {mode:'open',  C:1e-10, KD:10e-9,  kon:1e5, gam:1e12, facc:0.50, fp:4, h:0.5e-3, Q:0,   G:200, sig:1, q:0.5}
+};
+
+function sup(n){const m={'-':'⁻','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};
+  return String(n).split('').map(c=>m[c]||c).join('');}
+function expo(v,u){
+  if(!isFinite(v)||v<=0) return v===0?'0':'∞';
+  const e=Math.floor(Math.log10(v)*(1+1e-12));
+  const m=(v/Math.pow(10,e)).toPrecision(3).replace(/\.?0+$/,'');
+  return (m==='1'?'':m+'×')+'10'+sup(e)+(u?' '+u:'');
+}
+function sci(v,u){
+  if(!isFinite(v)) return '∞';
+  if(v<=0) return '0';
+  const e=Math.floor(Math.log10(v)*(1+1e-12)), g=Math.floor(e/3)*3;
+  const pre={'-15':'f','-12':'p','-9':'n','-6':'µ','-3':'m','0':'','3':'k'};
+  if(pre[g]!==undefined) return (v/Math.pow(10,g)).toPrecision(3).replace(/\.?0+$/,'')+' '+pre[g]+u;
+  return expo(v,u);
+}
+function dur(s){
+  if(!isFinite(s)) return '∞';
+  if(s<=0) return '0';
+  if(s<1e-6) return (s*1e9).toPrecision(2)+' ns';
+  if(s<1e-3) return (s*1e6).toPrecision(2)+' µs';
+  if(s<1) return (s*1e3).toPrecision(2)+' ms';
+  if(s<90) return s.toFixed(0)+' s';
+  if(s<5400) return (s/60).toFixed(s<600?1:0)+' min';
+  if(s<2*86400) return (s/3600).toFixed(1)+' h';
+  if(s<400*86400) return (s/86400).toFixed(1)+' d';
+  return (s/(365*86400)).toPrecision(2)+' yr';
+}
+const commas=n=>Math.round(n).toLocaleString('en-US');
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+const SCI_TOKENS={
+  'K_D':'<tspan font-style="italic">K</tspan><tspan baseline-shift="sub" font-size="75%">D</tspan>',
+  'k_on':'<tspan font-style="italic">k</tspan><tspan baseline-shift="sub" font-size="75%">on</tspan>',
+  'k_m':'<tspan font-style="italic">k</tspan><tspan baseline-shift="sub" font-size="75%">m</tspan>',
+  'k_ET':'<tspan font-style="italic">k</tspan><tspan baseline-shift="sub" font-size="75%">ET</tspan>',
+  'C_s':'<tspan font-style="italic">C</tspan><tspan baseline-shift="sub" font-size="75%">s</tspan>',
+  'C_b':'<tspan font-style="italic">C</tspan><tspan baseline-shift="sub" font-size="75%">b</tspan>',
+  'Da_m':'<tspan font-style="italic">Da</tspan><tspan baseline-shift="sub" font-size="75%">m</tspan>',
+  'Γ_T':'<tspan font-style="italic">Γ</tspan><tspan baseline-shift="sub" font-size="75%">T</tspan>',
+  'θ_eq':'<tspan font-style="italic">θ</tspan><tspan baseline-shift="sub" font-size="75%">eq</tspan>',
+  'k₀':'<tspan font-style="italic">k</tspan><tspan baseline-shift="sub" font-size="75%">0</tspan>'
+};
+const SCI_RE=/K_D|k_on|k_m|k_ET|C_s|C_b|Da_m|Γ_T|θ_eq|k₀/g;
+const svgSci=s=>esc(s).replace(SCI_RE,t=>SCI_TOKENS[t]);
+const htmlSci=s=>esc(s).replace(SCI_RE,t=>{
+  const parts={K_D:['K','D'],k_on:['k','on'],k_m:['k','m'],k_ET:['k','ET'],C_s:['C','s'],C_b:['C','b'],Da_m:['Da','m'],'Γ_T':['Γ','T'],'θ_eq':['θ','eq'],'k₀':['k','0']}[t];
+  return `<i>${parts[0]}</i><sub>${parts[1]}</sub>`;
+});
+const isDark=()=>{const t=document.documentElement.getAttribute('data-theme');
+  return t==='dark'|| (t!=='light' && matchMedia('(prefers-color-scheme: dark)').matches);};
+
+/* ---------------- model ---------------- */
+function closedBinding(CT,RT,KD){
+  const S=RT+CT+KD, product=RT*CT;
+  const root=Math.sqrt(Math.max(0,S*S-4*product));
+  const B=product===0?0:2*product/(S+root);
+  const Bhi=(S+root)/2;
+  return {B,Bhi,root,theta:RT>0?B/RT:0,free:Math.max(0,CT-B)};
+}
+function associationTime90(CT,RT,KD,kon,open){
+  if(open) return Math.LN10/(kon*(CT+KD));
+  const s=closedBinding(CT,RT,KD);
+  if(s.root<=0||s.Bhi<=0) return Infinity;
+  const ratio=s.B/s.Bhi;
+  return Math.log(10-9*ratio)/(kon*s.root);
+}
+function model(p){
+  const D=p.D, C_SI=p.C*1000, KD_SI=p.KD*1000, kon_SI=p.kon/1000;
+  const open=p.mode==='open';
+  const gamAcc=p.gam*p.facc, gam_SI=gamAcc*1e4/NA;
+  const A=Math.PI*p.rwe*p.rwe, V=Math.PI*p.rch*p.rch*p.h, VL=V*1000;
+  let km=D/p.h, kmStatic=D/p.h;
+  if(p.Q>0){
+    const U=(p.Q*1e-9/60)/(2*p.rwe*p.h);
+    km=Math.max(km, 0.8075*Math.cbrt(D*D*(6*U/p.h)/(2*p.rwe)));
+  }
+  const k_rxn=kon_SI*gam_SI, Da=k_rxn/km, ratio=1/(1+Da);
+  const theta_ideal=p.C/(p.KD+p.C);
+
+  const NrTotal=p.gam*(A*1e4), Nr=gamAcc*(A*1e4), Nt=p.C*VL*NA;
+  const RT=Nr/(NA*VL), closed=closedBinding(p.C,RT,p.KD);
+  const theta_closed=closed.theta, theta=open?theta_ideal:theta_closed;
+  const Cfree=open?p.C:closed.free;
+
+  const koff=p.kon*p.KD, kobsOpen=p.kon*p.C+koff;
+  const relaxRateClosed=p.kon*closed.root;
+  const relaxRate=open?kobsOpen:relaxRateClosed;
+  const t90=associationTime90(p.C,RT,p.KD,p.kon,open);
+  const tauFree=Cfree>0?1/(p.kon*Cfree):Infinity, tauBound=1/koff;
+  const Geq=theta*gam_SI, Leq=gam_SI/(C_SI+KD_SI);
+  const tDel = p.Q>0 ? Geq/(km*C_SI) : (Math.PI/D)*Math.pow(Geq/(2*C_SI),2);
+  const starved = p.Q===0 && Leq>p.h;
+  const dI=theta*p.G, thr=3*p.sig, thTh=thr/p.G;
+  const CLODfree = thTh<1 ? p.KD*thTh/(1-thTh) : Infinity;
+  const CLOD = thTh<1 ? CLODfree+(open?0:RT*thTh) : Infinity;
+  const KDmax = thTh<1 ? Math.max(0,(p.C-(open?0:RT*thTh))*(1-thTh)/thTh) : 0;
+  const equilibriumThresholdCrossed=dI>=thr;
+  let tDetect=Infinity;
+  if(equilibriumThresholdCrossed&&theta>0&&relaxRate>0){
+    const y=Math.min(1-Number.EPSILON,Math.max(0,thTh/theta));
+    const r=open?0:(closed.Bhi>0?closed.B/closed.Bhi:0);
+    tDetect=Math.log((1-y*r)/(1-y))/relaxRate;
+  }
+
+  /* Berg–Purcell crossover, r_z = 1 nm */
+  const rz=1e-9, gamStar=km/(4*D*rz)/1e4;            /* cm^-2 */
+  const spacing=1/Math.sqrt(p.gam)*1e7;              /* nm */
+  const accessSpacing=1/Math.sqrt(gamAcc)*1e7;       /* nm */
+  const fp=p.fp;                                      /* nm, physical footprint */
+  const coverage=p.gam*Math.PI*Math.pow(fp*1e-7/2,2);
+
+  /* dynamic */
+  const tauD=p.h*p.h/D, tauR=open?1/kobsOpen:1/relaxRateClosed;
+  const tauA_pump = p.Q>0 ? V/(p.Q*1e-9/60) : Infinity;
+  const passiveVelocity=p.q*1e-9/60/1e-4;            /* µL min⁻¹ cm⁻² -> m s⁻¹ */
+  const tauA_passive = p.h/passiveVelocity;
+  const tauA = p.Q>0 ? tauA_pump : tauA_passive;
+  const fcD=0.65/tauD, fcR=0.27/tauR, fcA=0.39/tauA;
+  const fc=1/(1/fcD+1/fcR+1/fcA);
+  const fcPump=1/(1/fcD+1/fcR+(p.Q>0?1/(0.39/tauA_pump):0));
+
+  /* limited volume */
+  const Cb0=gam_SI/p.h;                              /* mol/m3 */
+  const alpha=Cb0/KD_SI;
+  const tauRLV=1/(kon_SI*Cb0);
+  const tauClosed=(1/koff)/(1+alpha);
+  const dfCycle=(p.h/gam_SI)*C_SI;                   /* linearised, f_init = 0 */
+
+  /* Static planar-diffusion benchmark, converted to receptor occupancy. */
+  const hit2h=Math.min(1,(2*A/V)*Math.sqrt(D*7200/Math.PI));
+  const delivered2h=open
+    ? Math.min(1,(2*A*C_SI*Math.sqrt(D*7200/Math.PI)*NA)/Nr)
+    : Math.min(1,hit2h*Nt/Nr);
+
+  /* transduction */
+  const tPulse=1/(2*p.f);                       /* s, SWV half-cycle */
+  const Lleash=8e-9;
+  const tLeashFast=Lleash*Lleash/(2*1e-10), tLeashSlow=Lleash*Lleash/(2*1e-12);
+  const sigRatio=Math.sqrt(2*(1-p.rho));        /* sigma_diff / sigma */
+  const snrGain=Math.SQRT2/Math.sqrt(1-p.rho);  /* equal & opposite responses */
+  const kappa=0.304/Math.sqrt(p.I);             /* nm */
+  const pocket=5;                               /* nm, stated */
+  const Greq=thr/theta;                         /* gain (%) needed at this occupancy */
+
+  return {tPulse,Lleash,tLeashFast,tLeashSlow,sigRatio,snrGain,kappa,pocket,Greq,
+          open,RT,Cfree,closedRoot:closed.root,closedRootRatio:closed.Bhi>0?closed.B/closed.Bhi:0,
+          relaxRate,D,km,kmStatic,k_rxn,Da,ratio,theta,theta_ideal,theta_closed,koff,kobs:kobsOpen,t90,tauFree,tauBound,
+          Geq,Leq,tDel,starved,dI,thr,thTh,CLOD,CLODfree,KDmax,equilibriumThresholdCrossed,tDetect,V,A,Nr,NrTotal,Nt,gam_SI,gamAcc,
+          perTarget:Nr/Nt,ceiling:Math.min(1,Nt/Nr),
+          gamStar,spacing,accessSpacing,fp,coverage,facc:p.facc,hit2h,delivered2h,
+          tauD,tauR,tauA,tauA_pump,tauA_passive,fcD,fcR,fcA,fc,fcPump,
+          Cb0,alpha,tauRLV,tauClosed,dfCycle};
+}
+
+/* ---------------- line chart ---------------- */
+function plot(el,o){
+  const W=760,H=o.H||260,M={t:16,r:o.mr||20,b:38,l:o.ml||54};
+  const iw=W-M.l-M.r, ih=H-M.t-M.b;
+  const lx=o.logX, ly=o.logY;
+  const fx=v=>lx?Math.log10(Math.max(v,1e-300)):v, fy=v=>ly?Math.log10(Math.max(v,1e-300)):v;
+  const [x0,x1]=[fx(o.xd[0]),fx(o.xd[1])], [y0,y1]=[fy(o.yd[0]),fy(o.yd[1])];
+  const X=v=>M.l+(fx(v)-x0)/(x1-x0)*iw, Y=v=>M.t+ih-(fy(v)-y0)/(y1-y0)*ih;
+  const cl=v=>Math.min(Math.max(v,o.yd[0]),o.yd[1]);
+  let s='';
+  (o.bands||[]).forEach(b=>{
+    const a=X(Math.max(b.from,o.xd[0])), c=X(Math.min(b.to,o.xd[1]));
+    if(!isFinite(a)||!isFinite(c)||c<=a) return;
+    s+=`<rect x="${a}" y="${M.t}" width="${c-a}" height="${ih}" fill="${b.fill}"/>`;
+    if(b.label&&(c-a)>96) s+=`<text x="${(a+c)/2}" y="${M.t+13}" text-anchor="middle" font-size="10.5" letter-spacing=".06em" fill="var(--ink-3)" font-family="IBM Plex Mono,monospace">${svgSci(b.label)}</text>`;
+  });
+  o.xticks.forEach(t=>{
+    s+=`<line x1="${X(t.v)}" y1="${M.t+ih}" x2="${X(t.v)}" y2="${M.t+ih+4}" stroke="var(--axis)" stroke-width="1"/>`;
+    if(t.l) s+=`<text x="${X(t.v)}" y="${M.t+ih+17}" text-anchor="middle" font-size="11" fill="var(--ink-3)" font-family="IBM Plex Mono,monospace">${esc(t.l)}</text>`;
+  });
+  o.yticks.forEach(t=>{
+    s+=`<line x1="${M.l-4}" y1="${Y(t.v)}" x2="${M.l}" y2="${Y(t.v)}" stroke="var(--axis)" stroke-width="1"/>`;
+    s+=`<text x="${M.l-9}" y="${Y(t.v)+4}" text-anchor="end" font-size="11" fill="var(--ink-3)" font-family="IBM Plex Mono,monospace">${esc(t.l)}</text>`;
+  });
+  s+=`<path d="M ${M.l} ${M.t} V ${M.t+ih} H ${M.l+iw}" fill="none" stroke="var(--axis)" stroke-width="1.1"/>`;
+  (o.hlines||[]).forEach(h=>{
+    s+=`<line x1="${M.l}" y1="${Y(cl(h.y))}" x2="${M.l+iw}" y2="${Y(cl(h.y))}" stroke="${h.color}" stroke-width="2" stroke-dasharray="5 4"/>`;
+    if(h.label) s+=`<text x="${M.l+iw}" y="${Y(cl(h.y))-7}" text-anchor="end" font-size="11" fill="${h.color}" font-family="IBM Plex Mono,monospace">${svgSci(h.label)}</text>`;
+  });
+  (o.vlines||[]).forEach(h=>{
+    if(!isFinite(h.x)||h.x<o.xd[0]||h.x>o.xd[1]) return;
+    s+=`<line x1="${X(h.x)}" y1="${M.t}" x2="${X(h.x)}" y2="${M.t+ih}" stroke="${h.color}" stroke-width="2" stroke-dasharray="5 4"/>`;
+    if(h.label) s+=`<text x="${X(h.x)+6}" y="${M.t+13}" font-size="11" fill="${h.color}" font-family="IBM Plex Mono,monospace">${svgSci(h.label)}</text>`;
+  });
+  (o.ribbons||[]).forEach(rb=>{
+    const good=rb.data.filter(d=>isFinite(d[1])&&isFinite(d[2]));
+    if(good.length<2) return;
+    const upper=good.map(d=>`${X(d[0]).toFixed(2)},${Y(cl(d[2])).toFixed(2)}`);
+    const lower=good.slice().reverse().map(d=>`${X(d[0]).toFixed(2)},${Y(cl(d[1])).toFixed(2)}`);
+    s+=`<polygon points="${upper.concat(lower).join(' ')}" fill="${rb.color}" opacity="${rb.opacity||.16}"/>`;
+  });
+  o.series.forEach(se=>{
+    const pts=se.data.filter(d=>isFinite(d[1])).map(d=>`${X(d[0]).toFixed(2)},${Y(cl(d[1])).toFixed(2)}`).join(' ');
+    if(se.fill) s+=`<polygon points="${X(o.xd[0])},${Y(o.yd[0])} ${pts} ${X(o.xd[1])},${Y(o.yd[0])}" fill="${se.color}" opacity=".08"/>`;
+    s+=`<polyline points="${pts}" fill="none" stroke="${se.color}" stroke-width="${se.w||2}" stroke-linejoin="round" stroke-linecap="round"${se.dash?` stroke-dasharray="${se.dash}"`:''}/>`;
+    if(se.tag){
+      const last=se.data[se.data.length-1];
+      s+=`<text x="${X(last[0])-4}" y="${Y(cl(last[1]))-7}" text-anchor="end" font-size="11" font-weight="500" fill="${se.color}" font-family="IBM Plex Mono,monospace">${svgSci(se.tag)}</text>`;
+    }
+  });
+  (o.markers||[]).forEach(mk=>{
+    if(!isFinite(mk.x)) return;
+    const cx=X(Math.min(Math.max(mk.x,o.xd[0]),o.xd[1])), cy=Y(cl(mk.y));
+    s+=`<line x1="${cx}" y1="${M.t}" x2="${cx}" y2="${M.t+ih}" stroke="${mk.color}" stroke-width="1.5" stroke-dasharray="3 3" opacity=".55"/>`;
+    s+=`<circle cx="${cx}" cy="${cy}" r="5.5" fill="${mk.color}" stroke="var(--surface)" stroke-width="2"/>`;
+    if(mk.label){
+      const anchor=cx>M.l+iw*0.62?'end':'start', dx=anchor==='end'?-10:10;
+      s+=`<text x="${cx+dx}" y="${cy-12+(mk.dy||0)}" text-anchor="${anchor}" font-size="11.5" font-weight="500" fill="${mk.color}" font-family="IBM Plex Mono,monospace">${svgSci(mk.label)}</text>`;
+    }
+  });
+  s+=`<text x="${M.l+iw/2}" y="${H-2}" text-anchor="middle" font-size="11" letter-spacing=".025em" fill="var(--ink-3)" font-family="IBM Plex Mono,monospace">${svgSci(o.xLabel)}</text>`;
+  s+=`<text transform="translate(13,${M.t+ih/2}) rotate(-90)" text-anchor="middle" font-size="11" letter-spacing=".025em" fill="var(--ink-3)" font-family="IBM Plex Mono,monospace">${svgSci(o.yLabel)}</text>`;
+  const named=o.series.filter(x=>x.name);
+  const ribbonNames=(o.ribbons||[]).filter(x=>x.name);
+  const legend=named.length>1||ribbonNames.length
+    ? `<div class="legend">${named.map(x=>`<span><i class="swatch" style="background:${x.color}${x.dash?';opacity:.55':''}"></i>${htmlSci(x.name)}</span>`).join('')}${ribbonNames.map(x=>`<span><i class="swatch band" style="background:${x.color}"></i>${htmlSci(x.name)}</span>`).join('')}</div>` : '';
+  el.innerHTML=legend+`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.aria||o.yLabel)}">${s}</svg><div class="tip"></div>`;
+  const svg=el.querySelector('svg'), tip=el.querySelector('.tip');
+  svg.addEventListener('pointermove',e=>{
+    const r=svg.getBoundingClientRect(), sx=(e.clientX-r.left)/r.width*W;
+    if(sx<M.l||sx>M.l+iw){tip.style.opacity=0; return;}
+    const v=x0+(sx-M.l)/iw*(x1-x0), xv=lx?Math.pow(10,v):v;
+    const rows=(named.length?named:o.series).map(se=>{
+      let best=se.data[0];
+      for(const d of se.data) if(Math.abs(fx(d[0])-fx(xv))<Math.abs(fx(best[0])-fx(xv))) best=d;
+      return `<b>${se.name?esc(se.name)+' ':''}</b>${o.fmtY(best[1])}`;
+    });
+    tip.innerHTML=`${o.fmtX(xv)}<br>${rows.join('<br>')}`;
+    tip.style.left=(sx/W*100)+'%'; tip.style.top=((M.t+10)/H*r.height)+'px'; tip.style.opacity=1;
+  });
+  svg.addEventListener('pointerleave',()=>tip.style.opacity=0);
+}
+
+/* ---------------- horizontal bars (duty cycle, lag budget) ---------------- */
+function barChart(el,rows,opt){
+  const W=760, rowH=opt.rowH||54, M={t:26,r:24,b:36,l:opt.ml||120};
+  const H=M.t+rows.length*rowH+M.b-18, iw=W-M.l-M.r;
+  const vals=rows.map(r=>r.t).filter(v=>isFinite(v)&&v>0);
+  const lo=Math.pow(10,Math.floor(Math.log10(Math.min(...vals))));
+  const hi=Math.pow(10,Math.ceil(Math.log10(Math.max(...vals))));
+  const x0=Math.log10(lo), x1=Math.log10(hi*1.0001);
+  const X=v=>M.l+(Math.log10(Math.min(Math.max(v,lo),hi))-x0)/(x1-x0)*iw;
+  let s=`<line x1="${M.l}" y1="${H-M.b+4}" x2="${M.l+iw}" y2="${H-M.b+4}" stroke="var(--axis)" stroke-width="1.1"/>`;
+  for(let e=Math.ceil(x0);e<=Math.floor(Math.log10(hi));e++){
+    const v=Math.pow(10,e);
+    s+=`<line x1="${X(v)}" y1="${H-M.b+4}" x2="${X(v)}" y2="${H-M.b+8}" stroke="var(--axis)" stroke-width="1"/>`;
+    s+=`<text x="${X(v)}" y="${H-M.b+20}" text-anchor="middle" font-size="11" fill="var(--ink-3)" font-family="IBM Plex Mono,monospace">${esc(dur(v))}</text>`;
+  }
+  rows.forEach((r,i)=>{
+    const y=M.t+i*rowH, bh=24, wpx=Math.max(2,X(r.t)-M.l), inside=wpx>150;
+    s+=`<rect x="${M.l}" y="${y}" width="${wpx}" height="${bh}" rx="4" fill="${r.c}"/>`;
+    s+=`<text x="${M.l-12}" y="${y+15}" text-anchor="end" font-size="12.5" font-weight="500" fill="var(--ink)" font-family="IBM Plex Sans,sans-serif">${esc(r.label)}</text>`;
+    s+=`<text x="${M.l-12}" y="${y+29}" text-anchor="end" font-size="10.5" fill="var(--ink-3)" font-family="IBM Plex Mono,monospace">${esc(r.sub)}</text>`;
+    s+=`<text x="${inside?X(r.t)-10:X(r.t)+10}" y="${y+17}" text-anchor="${inside?'end':'start'}" font-size="12" font-weight="500" fill="${inside?'#fff':'var(--ink)'}" font-family="IBM Plex Mono,monospace">${esc(dur(r.t))}</text>`;
+  });
+  s+=`<text x="${M.l+iw/2}" y="${H-4}" text-anchor="middle" font-size="11" letter-spacing=".05em" fill="var(--ink-3)" font-family="IBM Plex Mono,monospace">${esc(opt.axis)}</text>`;
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(opt.axis)}">${s}</svg>`;
+}
+
+/* ---------------- heatmap (sequential, one hue) ---------------- */
+const RAMPS={
+  blueL:['#F4F8FE','#DCE8FA','#B9CFF2','#8FB0E8','#6389DA','#3F66D3','#26479F','#162C63'],
+  blueD:['#111826','#16243E','#1C3560','#254A8A','#3465BC','#5087DB','#7FAAE8','#B4CDF3'],
+  amberL:['#FDF6EA','#F9E7C6','#F1D194','#E3B361','#CD8F27','#A96E10','#7D500A','#523405'],
+  amberD:['#1B1710','#2B2214','#413018','#5E4318','#845C16','#AE7A1B','#D0A046','#E8C689']
+};
+function rampCss(a){return `linear-gradient(90deg,${a.join(',')})`;}
+function rampColor(a,t){
+  t=Math.min(1,Math.max(0,t));
+  const x=t*(a.length-1), i=Math.min(a.length-2,Math.floor(x)), f=x-i;
+  const p=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
+  const c1=p(a[i]), c2=p(a[i+1]);
+  return `rgb(${Math.round(c1[0]+(c2[0]-c1[0])*f)},${Math.round(c1[1]+(c2[1]-c1[1])*f)},${Math.round(c1[2]+(c2[2]-c1[2])*f)})`;
+}
+const KDR=[1e-11,1e-5], KONR=[1e3,1e8], NG=64;
+
+function heatmap(el,o){
+  const W=440,H=330,M={t:12,r:12,b:44,l:62};
+  const iw=W-M.l-M.r, ih=H-M.t-M.b;
+  const lx0=Math.log10(o.xd[0]),lx1=Math.log10(o.xd[1]);
+  const ly0=Math.log10(o.yd[0]),ly1=Math.log10(o.yd[1]);
+  const X=v=>M.l+(Math.log10(v)-lx0)/(lx1-lx0)*iw;
+  const Y=v=>M.t+ih-(Math.log10(v)-ly0)/(ly1-ly0)*ih;
+
+  let cv=el.querySelector('canvas');
+  if(!cv){cv=document.createElement('canvas'); el.appendChild(cv);}
+  cv.width=NG; cv.height=NG;
+  cv.style.left=(M.l/W*100)+'%'; cv.style.top=(M.t/H*100)+'%';
+  cv.style.width=(iw/W*100)+'%'; cv.style.height=(ih/H*100)+'%';
+  const ctx=cv.getContext('2d'), img=ctx.createImageData(NG,NG);
+  for(let j=0;j<NG;j++) for(let i=0;i<NG;i++){
+    const kd=Math.pow(10,lx0+(i+.5)/NG*(lx1-lx0));
+    const kon=Math.pow(10,ly1-(j+.5)/NG*(ly1-ly0));
+    const t=o.norm(o.f(kd,kon));
+    const c=rampColor(o.ramp,t).match(/\d+/g);
+    const k=(j*NG+i)*4;
+    img.data[k]=+c[0]; img.data[k+1]=+c[1]; img.data[k+2]=+c[2]; img.data[k+3]=255;
+  }
+  ctx.putImageData(img,0,0);
+
+  let s='';
+  o.xticks.forEach(t=>{ s+=`<line x1="${X(t.v)}" y1="${M.t+ih}" x2="${X(t.v)}" y2="${M.t+ih+4}" stroke="var(--axis)"/><text x="${X(t.v)}" y="${M.t+ih+17}" text-anchor="middle" font-size="10.5" fill="var(--ink-3)" font-family="IBM Plex Mono,monospace">${esc(t.l)}</text>`; });
+  o.yticks.forEach(t=>{ s+=`<line x1="${M.l-4}" y1="${Y(t.v)}" x2="${M.l}" y2="${Y(t.v)}" stroke="var(--axis)"/><text x="${M.l-8}" y="${Y(t.v)+4}" text-anchor="end" font-size="10.5" fill="var(--ink-3)" font-family="IBM Plex Mono,monospace">${esc(t.l)}</text>`; });
+  s+=`<path d="M ${M.l} ${M.t} V ${M.t+ih} H ${M.l+iw}" fill="none" stroke="var(--axis)" stroke-width="1.1"/>`;
+  (o.contours||[]).forEach(c=>{
+    const pts=[];
+    for(let i=0;i<=120;i++){
+      const kd=Math.pow(10,lx0+i/120*(lx1-lx0));
+      const kon=c.solve(kd);
+      if(kon>=o.yd[0]&&kon<=o.yd[1]) pts.push(`${X(kd).toFixed(1)},${Y(kon).toFixed(1)}`);
+    }
+    if(pts.length>2){
+      s+=`<polyline points="${pts.join(' ')}" fill="none" stroke="var(--ink)" stroke-width="1" opacity=".45"/>`;
+      const mid=pts[Math.floor(pts.length*0.5)].split(',');
+      s+=`<text x="${mid[0]}" y="${+mid[1]-5}" font-size="10" fill="var(--ink-2)" font-family="IBM Plex Mono,monospace" opacity=".85">${esc(c.label)}</text>`;
+    }
+  });
+  if(isFinite(o.mark.x)&&o.mark.x>=o.xd[0]&&o.mark.x<=o.xd[1]&&o.mark.y>=o.yd[0]&&o.mark.y<=o.yd[1]){
+    s+=`<circle cx="${X(o.mark.x)}" cy="${Y(o.mark.y)}" r="7" fill="none" stroke="var(--crit)" stroke-width="2.4"/>`;
+    const a=X(o.mark.x)>M.l+iw*.6?'end':'start';
+    s+=`<text x="${X(o.mark.x)+(a==='end'?-12:12)}" y="${Y(o.mark.y)+4}" text-anchor="${a}" font-size="10.5" font-weight="500" fill="var(--crit)" font-family="IBM Plex Mono,monospace">candidate</text>`;
+  }
+  s+=`<text x="${M.l+iw/2}" y="${H-6}" text-anchor="middle" font-size="10.5" letter-spacing=".02em" fill="var(--ink-3)" font-family="IBM Plex Mono,monospace">${svgSci('Affinity, K_D (M)')}</text>`;
+  s+=`<text transform="translate(14,${M.t+ih/2}) rotate(-90)" text-anchor="middle" font-size="10.5" letter-spacing=".02em" fill="var(--ink-3)" font-family="IBM Plex Mono,monospace">${svgSci('Association rate, k_on (M⁻¹ s⁻¹)')}</text>`;
+
+  let svg=el.querySelector('svg');
+  if(!svg){svg=document.createElementNS('http://www.w3.org/2000/svg','svg'); el.appendChild(svg);}
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  svg.setAttribute('role','img');
+  svg.setAttribute('aria-label',o.aria);
+  svg.innerHTML=s;
+  let tip=el.querySelector('.tip');
+  if(!tip){tip=document.createElement('div'); tip.className='tip'; el.appendChild(tip);}
+  svg.onpointermove=e=>{
+    const r=svg.getBoundingClientRect();
+    const sx=(e.clientX-r.left)/r.width*W, sy=(e.clientY-r.top)/r.height*H;
+    if(sx<M.l||sx>M.l+iw||sy<M.t||sy>M.t+ih){tip.style.opacity=0;return;}
+    const kd=Math.pow(10,lx0+(sx-M.l)/iw*(lx1-lx0));
+    const kon=Math.pow(10,ly1-(sy-M.t)/ih*(ly1-ly0));
+    tip.innerHTML=`<b>K_D </b>${sci(kd,'M')}<br><b>k_on </b>${expo(kon,'')}<br>${o.fmt(o.f(kd,kon))}`;
+    tip.style.left=(sx/W*100)+'%'; tip.style.top=((sy-8)/H*r.height)+'px'; tip.style.opacity=1;
+  };
+  svg.onpointerleave=()=>tip.style.opacity=0;
+}
+
+const decades=(a,b,f)=>{const t=[];for(let e=Math.ceil(Math.log10(a));e<=Math.log10(b)+1e-9;e++)t.push({v:Math.pow(10,e),l:f(Math.pow(10,e),e)});return t;};
+const lspace=(a,b,n)=>{const o=[];for(let i=0;i<=n;i++)o.push(Math.pow(10,Math.log10(a)+(Math.log10(b)-Math.log10(a))*i/n));return o;};
+
+/* ---------------- coverage picture ---------------- */
+function coverage(el,m,S1){
+  const W=440,H=270, box=180, ox=(W-box)/2, oy=26;
+  const n=24;                       /* always a 24 x 24 patch of probes */
+  const win=n*m.spacing;            /* nm across the window */
+  const rScale=(m.fp/win)*box/2;
+  const radiusFloored=rScale<0.55;
+  const r=Math.max(0.55,rScale);
+  let s=`<rect x="${ox}" y="${oy}" width="${box}" height="${box}" fill="var(--surface-2)" stroke="var(--rule-2)"/>`;
+  for(let i=0;i<n;i++) for(let j=0;j<n;j++){
+    const cx=ox+(i+.5)*(box/n), cy=oy+(j+.5)*(box/n);
+    const hash=((i*73856093^j*19349663)>>>0)%10000/10000;
+    const live=hash<m.facc;
+    s+=`<circle cx="${cx.toFixed(2)}" cy="${cy.toFixed(2)}" r="${r.toFixed(2)}" fill="${live?S1:'var(--ink-3)'}" fill-opacity="${live?'.88':'.28'}"/>`;
+  }
+  s+=`<line x1="${ox}" y1="${oy+box+14}" x2="${ox+box}" y2="${oy+box+14}" stroke="var(--ink-3)"/>`;
+  s+=`<line x1="${ox}" y1="${oy+box+10}" x2="${ox}" y2="${oy+box+18}" stroke="var(--ink-3)"/>`;
+  s+=`<line x1="${ox+box}" y1="${oy+box+10}" x2="${ox+box}" y2="${oy+box+18}" stroke="var(--ink-3)"/>`;
+  s+=`<text x="${ox+box/2}" y="${oy+box+30}" text-anchor="middle" font-size="11" fill="var(--ink-3)" font-family="IBM Plex Mono,monospace">${win<1000?win.toPrecision(3)+' nm':(win/1000).toPrecision(3)+' µm'} across · ${n}×${n} probes</text>`;
+  s+=`<text x="${ox+box/2}" y="${oy-9}" text-anchor="middle" font-size="11" letter-spacing=".025em" fill="var(--ink-3)" font-family="IBM Plex Mono,monospace">${radiusFloored?'Spacing to scale · dots enlarged for visibility':'Spacing and footprint to scale'} · ${(100*m.facc).toFixed(0)}% accessible</text>`;
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Probe spacing on the electrode surface${radiusFloored?', with dot radii enlarged for visibility':', with spacing and footprint drawn to scale'}">${s}</svg>`;
+}
+
+/* ---------------- render ---------------- */
+function render(){
+  const m=model(P), cs=getComputedStyle(document.documentElement);
+  const cv=v=>cs.getPropertyValue(v).trim();
+  const S1=cv('--s1'), S2=cv('--s2'), S3=cv('--s3'), CR=cv('--crit'),
+        BAND=cv('--band'), CSOFT=cv('--crit-soft'), OKS=cv('--ok-soft');
+  const pct=v=>v*100<0.001?(v*100).toExponential(1):(v*100).toPrecision(3);
+  const dk=isDark();
+  const rampT=dk?RAMPS.blueD:RAMPS.blueL, rampA=dk?RAMPS.amberD:RAMPS.amberL;
+  const s=P.sens;
+  const pessimistic=s?model({...P,C:P.C*(1-s),KD:P.KD*(1+s),G:P.G*(1-s),sig:P.sig*(1+s)}):m;
+  const optimistic=s?model({...P,C:P.C*(1+s),KD:P.KD*(1-s),G:P.G*(1+s),sig:P.sig*(1-s)}):m;
+  const robustPass=s&&pessimistic.dI>=pessimistic.thr;
+  const robustFail=s&&optimistic.dI<optimistic.thr;
+  const sensitivityVerdict=!s?'Sensitivity envelope off':robustPass?'Threshold result remains positive across the envelope':robustFail?'Threshold result remains negative across the envelope':'Threshold conclusion changes within the envelope';
+
+  /* ---- readout ---- */
+  const reg = m.Da<0.2?['v-ok','reaction-limited']:m.Da>5?['v-bad','transport-limited']:['v-warn','mixed control'];
+  const det = m.equilibriumThresholdCrossed?['v-ok','model threshold crossed']:['v-bad','model threshold not crossed'];
+  const inv = !m.open&&m.theta_ideal>m.ceiling?['v-bad','inventory-limited']:['v-ok',m.open?'maintained supply':'enough target'];
+  document.getElementById('readout').innerHTML=[
+    ['Sample boundary', m.open?'maintained':'finite / closed',`<span class="verdict ${m.open?'v-ok':'v-warn'}">${m.open?'open model':'mass conserved'}</span>`,m.open?'Reservoir concentration is fixed by assumption.':'Binding removes analyte from a finite inventory.'],
+    ['k<sub>m</sub>', sci(m.km,'m/s'),''],
+    ['Da<sub>m</sub>', m.Da<0.01?expo(m.Da,''):m.Da.toPrecision(3), `<span class="verdict ${reg[0]}">${reg[1]}</span>`,`Da<sub>m</sub> ${m.Da<0.2?'&lt; 0.2: surface reaction is slower than delivery.':m.Da>5?'&gt; 5: capture outpaces delivery.':'is between 0.2 and 5.'}`],
+    ['C<sub>s</sub>/C<sub>b</sub> <span class="u">(binding)</span>', (m.ratio*100).toPrecision(3)+'<span class="u"> %</span>',''],
+    [`Receptors per ${m.open?'chamber-scale ':''}target`, m.perTarget>=1?commas(m.perTarget)+'<span class="u">×</span>':'1 : '+commas(1/m.perTarget),
+      `<span class="verdict ${inv[0]}">${inv[1]}</span>`,m.open?'Maintained supply prevents inventory depletion.':m.theta_ideal>m.ceiling?'Ideal occupancy exceeds the finite-inventory ceiling.':'The inventory ceiling exceeds ideal occupancy.'],
+    ['θ occupied', pct(m.theta), '<span class="u">%</span>'],
+    ['ΔS / S', m.dI<0.01?expo(m.dI,''):m.dI.toPrecision(3)+'<span class="u"> %</span>', `<span class="verdict ${det[0]}">${det[1]}</span>`,`Predicted ${m.dI.toPrecision(3)}% ${m.equilibriumThresholdCrossed?'≥':'&lt;'} 3σ = ${m.thr.toPrecision(3)}%.`],
+    [`LOD (3σ) <span class="u">(${m.open?'inlet':'total'})</span>`, sci(m.CLOD,'M'), m.CLOD<=P.C?'<span class="verdict v-ok">C ≥ model LOD</span>':`<span class="verdict v-bad">C is ${(m.CLOD/P.C).toPrecision(2)}× below model LOD</span>`,`Selected C ${m.CLOD<=P.C?'meets or exceeds':'is below'} the modeled 3σ concentration.`],
+    ['Ideal threshold time', Number.isFinite(m.tDetect)?dur(m.tDetect):'not reached', '<span class="u">binding-only lower bound</span>'],
+    [`Binding t<sub>90</sub> <span class="u">(${m.open?'open':'closed'})</span>`, dur(m.t90),''],
+    ['Delivery time', dur(m.tDel),''],
+    ['L<sub>eq</sub>', (m.Leq*1e3).toPrecision(3)+'<span class="u"> mm</span>',
+      m.starved?'<span class="verdict v-warn">needs lateral supply</span>':'<span class="verdict v-ok">fits above sensor</span>',`L<sub>eq</sub> ${m.starved?'exceeds':'does not exceed'} chamber height H.`],
+    ['Cutoff f<sub>c</sub>', expo(m.fc,'Hz'),`<span class="u">${dur(1/m.fc)} period</span>`]
+  ].map(([k,v,x,why])=>`<div class="stat"><span class="k">${k}</span><span class="v">${v}</span>${x}${why?`<span class="why"><b>Why:</b> ${why}</span>`:''}</div>`).join('');
+
+  const scenario=document.getElementById('scenario-result');
+  scenario.className=`panel scenario-result ${m.equilibriumThresholdCrossed?'pass':'fail'}`;
+  scenario.innerHTML=
+    `<div><span class="label">Current scenario · equilibrium estimate</span><div class="headline">${m.equilibriumThresholdCrossed?'3σ threshold crossed under these assumptions':'3σ threshold not crossed under these assumptions'}</div></div>`+
+    `<div class="detail"><span class="why-label">Why</span>Predicted signal <b>${m.dI.toPrecision(3)}%</b> versus threshold <b>${m.thr.toPrecision(3)}%</b>, using a <b>${m.open?'maintained-concentration':'finite sealed-chamber'}</b> boundary. ${m.equilibriumThresholdCrossed?`The ideal binding-only time to first cross the threshold is <b>${dur(m.tDetect)}</b>. `:''}<span class="sensitivity-note">${s?`±${Math.round(100*s)}% stress test: signal ${pessimistic.dI.toPrecision(3)}–${optimistic.dI.toPrecision(3)}%; threshold ${optimistic.thr.toPrecision(3)}–${pessimistic.thr.toPrecision(3)}%. <b>${sensitivityVerdict}.</b> C, K<sub>D</sub>, gain, and blank σ are varied simultaneously in pessimistic/optimistic directions; this is a sensitivity envelope, not a confidence interval.`:'Turn on the sensitivity envelope to test whether this conclusion survives plausible input variation.'}</span></div>`;
+
+  /* ================= 01 density ================= */
+  const past=m.gamAcc/m.gamStar;
+  document.getElementById('a-density').innerHTML=
+    past>1
+      ? `For the current inputs, accessible density is <em>above the modeled capture crossover</em>. It is ${expo(m.gamAcc,'cm⁻²')}, about <b>${past>=1000?commas(past):past.toPrecision(2)}×</b> Γ* = ${expo(m.gamStar,'cm⁻²')}. Additional probes are therefore not predicted to improve initial capture in this approximation.`
+      : `For the current inputs, accessible density is <em>below the modeled capture crossover</em> by ${(1/past).toPrecision(2)}×. Within this approximation, increasing accessible density could increase the initial capture rate.`;
+
+  coverage(document.getElementById('c-cov'),m,S1);
+  document.getElementById('cov-stats').innerHTML=[
+    ['Probe spacing d ≈ 1/√Γ', m.spacing<10?m.spacing.toFixed(1)+' nm':m.spacing.toPrecision(3)+' nm'],
+    ['Accessible spacing d_acc', m.accessSpacing<10?m.accessSpacing.toFixed(1)+' nm':m.accessSpacing.toPrecision(3)+' nm'],
+    ['Surface covered', m.coverage*100<0.01?(m.coverage*100).toExponential(1)+' %':(m.coverage*100).toPrecision(3)+' %'],
+    ['Berg–Purcell crossover Γ*', expo(m.gamStar,'cm⁻²')],
+    ['Physical probes', expo(m.NrTotal,'')],
+    ['Accessible probes', expo(m.Nr,'')]
+  ].map(([k,v])=>`<div class="stat"><span class="k">${k}</span><span class="v" style="font-size:16px">${v}</span></div>`).join('');
+  document.getElementById('cov-note').innerHTML=
+    `The accessible density is <b>${expo(m.gamAcc,'cm⁻²')}</b>. At the capture crossover, physical footprints would cover only <b>${expo(100*m.gamStar*Math.PI*Math.pow(m.fp*1e-7/2,2),'%')}</b> of the surface. Accessibility, crowding, and geometric coverage are therefore separate quantities.${m.coverage>1?' <b style="color:var(--crit)">Nominal coverage exceeds 100%; these density and footprint inputs cannot describe non-overlapping circular probes.</b>':m.coverage>0.78?' <b style="color:var(--s2)">Nominal footprints are entering a strongly crowded/overlapping regime.</b>':''}`;
+  document.getElementById('f-cov').innerHTML=
+    `Each dot is one probe, drawn to scale with a ${m.fp.toFixed(1)} nm footprint. ${
+      past>1
+        ? `Accessible capture sites exceed the transport crossover by <b>${past>=1000?commas(past):past.toPrecision(2)}×</b>; additional physical probes are spectators as far as delivery is concerned. They can still reduce accessibility and alter surface affinity.`
+        : `More probes here would genuinely raise the capture rate — you are on the rising part of the curve.`} <b>Capture and signal are separate questions:</b> ${m.open?'with maintained concentration, equilibrium occupancy is C/(K<sub>D</sub>+C) and has no Γ in it.':'in a finite closed chamber, Γ also sets how much of the finite analyte inventory the surface consumes.'}`;
+
+  /* ================= 02 flow ================= */
+  const Qs=[]; for(let i=0;i<=120;i++) Qs.push(i*500/120);
+  const kmOf=Q=>{
+    if(Q<=0) return m.kmStatic;
+    const U=(Q*1e-9/60)/(2*P.rwe*P.h);
+    return Math.max(m.kmStatic, 0.8075*Math.cbrt(P.D*P.D*(6*U/P.h)/(2*P.rwe)));
+  };
+  const ratioOf=Q=>100/(1+m.k_rxn/kmOf(Q));
+  document.getElementById('a-flow').innerHTML=
+    `In the selected channel model, mass transfer grows as the <em>cube root</em> of flow rate: a hundredfold increase gives <b>${Math.pow(100,1/3).toFixed(1)}×</b> higher k<sub>m</sub>. Flow changes the approach to equilibrium; it does not change the final 1:1 equilibrium occupancy when concentration is maintained.`;
+  plot(document.getElementById('c-flow'),{
+    xd:[0,500], yd:[0,100], H:250,
+    xticks:[0,100,200,300,400,500].map(v=>({v,l:v===0?'static':v})),
+    yticks:[0,25,50,75,100].map(v=>({v,l:v+'%'})),
+    xLabel:'Flow rate (µL min⁻¹)', yLabel:'Surface-to-bulk concentration, C_s/C_b',
+    series:[{data:Qs.map(q=>[q,ratioOf(q)]),color:S1,fill:1}],
+    hlines:[{y:50,color:S3,label:'Da_m = 1'}],
+    markers:[{x:P.Q,y:m.ratio*100,color:S2,label:P.Q===0?'static':P.Q.toFixed(1)+' µL/min'}],
+    fmtX:v=>v===0?'static':v.toFixed(1)+' µL/min', fmtY:v=>v.toFixed(1)+'%'
+  });
+  let cross=null;
+  for(let q=1;q<=500;q+=0.5){ if(m.k_rxn/kmOf(q)<=1){cross=q;break;} }
+  document.getElementById('f-flow').innerHTML=
+    `${cross?`The transport/reaction crossover (Da<sub>m</sub> = 1) sits at <b>${cross.toFixed(0)} µL/min</b>. `:`Da<sub>m</sub> stays above 1 across the whole range — this chamber cannot be flowed out of transport limitation. `}
+     <b>Independent check:</b> SPR practice recommends 50 µL/min with a floor of 30 — two routes, one threshold.
+     Recasting the Lévêque coefficient into the SPR grouping gives 1.47 against Myszka's 1.28, 14% apart from two independent derivations.`;
+
+  plot(document.getElementById('c-regime'),{
+    xd:[1e-3,1e3], yd:[0,100], logX:1, H:250,
+    bands:[{from:1e-3,to:0.2,fill:BAND,label:'REACTION-LIMITED'},{from:5,to:1e3,fill:CSOFT,label:'TRANSPORT-LIMITED'}],
+    xticks:decades(1e-3,1e3,(v,e)=>'10'+sup(e)),
+    yticks:[0,25,50,75,100].map(v=>({v,l:v+'%'})),
+    xLabel:'Damköhler number, Da_m = k_on·Γ_T/k_m', yLabel:'Surface-to-bulk concentration, C_s/C_b',
+    series:[{data:lspace(1e-3,1e3,160).map(d=>[d,100/(1+d)]),color:S1}],
+    markers:[{x:m.Da,y:m.ratio*100,color:S2,label:'your device'}],
+    fmtX:v=>'Da = '+v.toPrecision(2), fmtY:v=>v.toFixed(1)+'%'
+  });
+  document.getElementById('f-regime').innerHTML=
+    `Transport resistance <b>${expo(1/m.km,'s/m')}</b> against reaction resistance <b>${expo(1/m.k_rxn,'s/m')}</b>. ${
+      m.Da<0.2?`The surface reaction is the bottleneck — the near-surface concentration holds at <b>${(m.ratio*100).toFixed(1)}%</b> of bulk, so <b>faster flow buys almost nothing</b>.`
+      :m.Da>5?`Delivery is the bottleneck — the surface sees only <b>${(m.ratio*100).toFixed(1)}%</b> of bulk, so <b>geometry and flow matter directly</b>.`
+      :`Both resistances are within an order of magnitude, so <b>geometry changes the response but never dominates it</b> — the hardest case to interpret experimentally.`}`;
+
+  /* ================= 03 binding ================= */
+  const xs=lspace(1e-15,1e-4,180);
+  const occupancyAt=(c,kd)=>m.open?c/(kd+c):closedBinding(c,m.RT,kd).theta;
+  const iso=kd=>xs.map(c=>[c,100*occupancyAt(c,kd)]);
+  plot(document.getElementById('c-iso'),{
+    xd:[1e-15,1e-4], yd:[0,100], logX:1, H:270,
+    xticks:decades(1e-15,1e-4,(v,e)=>e%2?'':'10'+sup(e)),
+    yticks:[0,25,50,75,100].map(v=>({v,l:v+'%'})),
+    xLabel:'Target concentration (M)', yLabel:'Occupancy, θ',
+    series:[
+      {data:iso(P.KD*10),color:S3,name:'10× weaker',dash:'4 4',w:1.6},
+      {data:iso(P.KD),   color:S1,name:'your K_D = '+sci(P.KD,'M')},
+      {data:iso(P.KD/10),color:S2,name:'10× tighter',dash:'4 4',w:1.6}
+    ],
+    markers:[{x:P.C,y:m.theta*100,color:S2,label:sci(P.C,'M')}],
+    fmtX:v=>sci(v,'M'), fmtY:v=>v.toFixed(2)+'%'
+  });
+  const mult=P.KD/P.C;
+  document.getElementById('f-iso').innerHTML=
+    `The target sits <b>${mult>1?mult.toPrecision(3)+'× below':(1/mult).toPrecision(3)+'× above'} K<sub>D</sub></b>. ${m.open?`Maintained supply gives <b>${pct(m.theta)}%</b> occupancy.`:`The exact finite-volume balance gives <b>${pct(m.theta)}%</b> occupancy; free analyte at equilibrium is <b>${sci(m.Cfree,'M')}</b>.`} ${
+      !m.open&&m.theta_ideal>m.ceiling
+        ? `But the chamber holds only <b>${expo(m.Nt,'')}</b> targets for <b>${expo(m.Nr,'')}</b> receptors, so even binding every one caps you at <b>${pct(m.ceiling)}%</b> — <b>inventory is the tighter limit here</b>, and the closed-chamber balance gives <b>${pct(m.theta_closed)}%</b>.`
+        : m.open?`The reservoir supplies whatever the surface binds, so shifting the equilibrium curve left requires a tighter K<sub>D</sub>.`:`There are <b>${commas(m.perTarget)} receptors per target molecule</b>; here the affinity bound is tighter than the inventory bound.`}`;
+
+  barChart(document.getElementById('c-duty'),[
+    {label:'waiting, empty',   t:m.tauFree,  c:S1, sub:'1 / (k_on · C)'},
+    {label:'holding a target', t:m.tauBound, c:S2, sub:'1 / k_off'}
+  ],{axis:'Time spent in each state (log scale)'});
+  document.getElementById('duty-big').textContent='1 in '+commas(1/Math.max(m.theta,1e-12));
+  document.getElementById('duty-cap').textContent=
+    'receptors is holding a target at any instant — and it is a different set a moment later.';
+  document.getElementById('f-duty').innerHTML=
+    `A receptor waits <b>${dur(m.tauFree)}</b> on average at the equilibrium free concentration ${sci(m.Cfree,'M')}, then holds a target for <b>${dur(m.tauBound)}</b>. The duty cycle is <b>${pct(m.theta)}%</b>, equal to C<sub>free</sub>/(K<sub>D</sub>+C<sub>free</sub>). ${
+      m.tauFree>100*m.tauBound
+        ? `Because waiting dominates so heavily, <b>delivering targets faster cannot help</b> — they leave as quickly as they arrive. Only a longer τ<sub>bound</sub> or a higher C raises occupancy.`
+        : m.tauBound>m.tauFree
+        ? `Receptors spend most of their time occupied, so the surface is near saturation and the response is compressed — you are above K<sub>D</sub>.`
+        : `The two times are comparable, which puts you near K<sub>D</sub>, in the steepest and most sensitive part of the calibration curve.`}`;
+
+  /* ================= 04 kinetics ================= */
+  const tw=Math.max(600,Math.min(3.2*m.t90,10800)), tot=tw*2;
+  const associationFraction=t=>{
+    const e=Math.exp(-m.relaxRate*t);
+    return m.open?1-e:(1-e)/(1-m.closedRootRatio*e);
+  };
+  const th_t=t=>t<=tw?m.theta*associationFraction(t):m.theta*associationFraction(tw)*Math.exp(-m.koff*(t-tw));
+  const kd=[]; for(let i=0;i<=240;i++){const t=tot*i/240; kd.push([t,100*th_t(t)/(m.theta||1)]);}
+  plot(document.getElementById('c-kin'),{
+    xd:[0,tot], yd:[0,105],
+    xticks:[0,.25,.5,.75,1,1.25,1.5,1.75,2].map(f=>({v:tot*f/2,l:f===0?'0':dur(tot*f/2)})),
+    yticks:[0,25,50,75,100].map(v=>({v,l:v+'%'})),
+    xLabel:'Time (exposure, then blank washout)', yLabel:'Relative occupancy, θ/θ_eq',
+    series:[{data:kd,color:S1,fill:1}],
+    markers:[{x:Math.min(m.t90,tot),y:90,color:S2,label:'t₉₀ '+dur(m.t90),dy:34},
+             {x:Math.min(m.tDel,tot),y:100*th_t(Math.min(m.tDel,tot))/(m.theta||1),color:S3,label:'delivery '+dur(m.tDel)}],
+    fmtX:dur, fmtY:v=>v.toFixed(1)+'% of θ_eq'
+  });
+  document.getElementById('f-kin').innerHTML=
+    `${m.open?`k<sub>off</sub> = <b>${expo(m.koff,'s⁻¹')}</b> and k<sub>on</sub>C = <b>${expo(P.kon*P.C,'s⁻¹')}</b>, so k<sub>obs</sub> is ${
+      P.kon*P.C<0.1*m.koff?'dominated by dissociation — <b>response time is concentration-independent</b>':'still concentration-sensitive'}. Binding needs <b>${dur(m.t90)}</b> to reach 90%; transport needs <b>${dur(m.tDel)}</b> to supply that much, so <b>${m.tDel>m.t90?'delivery':'binding'} is the slower step</b>. Filling the surface means stripping <b>${(m.Leq*1e3).toPrecision(3)} mm</b> of solution${
+      m.starved?` — <b>more than the ${(P.h*1e3).toFixed(2)} mm column directly above the sensor holds</b>, so the sensor must recruit target laterally (V/A = ${(m.V/m.A*1e3).toPrecision(3)} mm available): slower and genuinely three-dimensional, but not impossible`:` against a ${(P.h*1e3).toFixed(2)} mm chamber`}.`:`The finite-volume association is a two-body process rather than a single exponential. Its exact 1:1 solution gives t<sub>90</sub> = <b>${dur(m.t90)}</b> and an equilibrium free concentration of <b>${sci(m.Cfree,'M')}</b>. The plotted washout assumes the chamber is then replaced with blank.`} Washout half-life after blank replacement: <b>${dur(Math.LN2/m.koff)}</b>.`;
+
+  /* ================= 05 transduction ================= */
+  document.getElementById('a-signal').innerHTML=
+    `Occupancy is not observed directly. A conformational change must become a current, and <em>this model treats that conversion as a measured input rather than predicting it.</em>`;
+
+  document.getElementById('g-have').textContent=P.G.toFixed(0)+' %';
+  document.getElementById('g-have-note').innerHTML=
+    `A typical assumed value. It means a fully occupied monolayer changes the peak current by ${P.G.toFixed(0)}% of its unbound value. <b>Nothing on this page derives it</b> \u2014 it has to come from a titration on your own electrode, with the readout you will ship.`;
+  const gShort=m.Greq/P.G;
+  document.getElementById('g-need').innerHTML=
+    `<span style="color:${gShort>1?'var(--crit)':'var(--ok)'}">${m.Greq>10000?expo(m.Greq,'%'):m.Greq.toPrecision(3)+' %'}</span>`;
+  document.getElementById('g-need-note').innerHTML=
+    `To clear ${m.thr.toFixed(2)}% blank noise at &#952; = ${pct(m.theta)}%, you need G \u2265 3&#963;/&#952;. ${
+      gShort>1
+        ? `That is <b>${gShort>1000?commas(gShort):gShort.toPrecision(3)}\u00d7 more than the current gain assumption</b>. Whether that gain is achievable cannot be decided here; it requires a surface calibration, while affinity, noise, accessibility, and receptor capacity provide alternative design levers.`
+        : `Your assumed gain already clears it, with ${(1/gShort).toPrecision(3)}\u00d7 to spare.`}`;
+
+  /* 05.1 — scan-rate diagnostic */
+  const nus=lspace(1,1e4,120);
+  plot(document.getElementById('c-nu'),{
+    xd:[1,1e4], yd:[0.005,200], logX:1, logY:1, H:250, ml:60,
+    xticks:decades(1,1e4,(v,e)=>'10'+sup(e)),
+    yticks:[0.01,0.1,1,10,100].map(v=>({v,l:v<1?v.toString():v+'\u00d7'})),
+    xLabel:'Scan rate, \u03bd (mV s⁻¹)', yLabel:'Relative peak current',
+    series:[
+      {data:nus.map(v=>[v,v/100]),color:S1,name:'surface-confined  i\u209a \u221d \u03bd'},
+      {data:nus.map(v=>[v,Math.sqrt(v/100)]),color:S2,name:'diffusing species  i\u209a \u221d \u221a\u03bd'}
+    ],
+    markers:[{x:100,y:1,color:S3,label:'normalised here'}],
+    fmtX:v=>v.toPrecision(3)+' mV/s', fmtY:v=>v.toPrecision(3)+'\u00d7'
+  });
+  document.getElementById('f-nu').innerHTML=
+    `The exponent is the identity test. Methylene blue is <b>tethered</b>, so it is already at the electrode and its peak current should rise <b>linearly</b> in \u03bd. A species arriving from solution gives \u221a\u03bd. Over the two decades shown the two predictions separate by <b>10\u00d7</b> \u2014 easily enough to tell apart, and worth doing before trusting any gain. <b>Caveat:</b> these are the <i>ideal reversible</i> laws. Uncompensated resistance, double-layer capacitance and quasireversibility all bend the slope, so treat a non-integer exponent as evidence, not proof.`;
+
+  /* 05.2 — leash vs pulse */
+  barChart(document.getElementById('c-leash'),[
+    {label:'reporter samples its space', t:m.tLeashFast, c:S1, sub:'L\u00b2/2D\u2090\u209a\u209a, fast limit'},
+    {label:'\u2026 slow limit',              t:m.tLeashSlow, c:S3, sub:'D\u2090\u209a\u209a = 10\u207b\u00b9\u00b2 m\u00b2/s'},
+    {label:'one SWV half-cycle',        t:m.tPulse,     c:S2, sub:'1/2f at '+P.f.toFixed(0)+' Hz'}
+  ],{axis:'Time (log scale)',ml:196});
+  const nFast=m.tPulse/m.tLeashFast, nSlow=m.tPulse/m.tLeashSlow;
+  document.getElementById('f-leash').innerHTML=
+    `At ${P.f.toFixed(0)} Hz the pulse lasts <b>${dur(m.tPulse)}</b>, during which an 8 nm leash re-samples its whole distance distribution <b>${nSlow<1?'less than once':commas(nSlow)+' to '+commas(nFast)+' times'}</b>. ${
+      nSlow>1
+        ? `The measurement therefore samples a <b>distance distribution</b> rather than one fixed separation. Reshaping that distribution is one plausible contribution to transduction, which is why G cannot be inferred from a static structure alone.`
+        : `At this frequency the pulse is shorter than the slow-limit sampling time, so the reporter no longer averages over its full range \u2014 the measurement becomes sensitive to the slowest configurations only. <b>This is the regime where signal-on flips to signal-off.</b>`}`;
+
+  /* 05.3 — tunnelling */
+  const rr=[]; for(let i=0;i<=120;i++) rr.push(i*20/120);
+  const kET=(b,r)=>Math.exp(-b*r);
+  plot(document.getElementById('c-beta'),{
+    xd:[0,20], yd:[1e-10,1], logY:1, H:260, ml:64,
+    xticks:[0,5,10,15,20].map(v=>({v,l:v+' \u00c5'})),
+    yticks:[1e-10,1e-8,1e-6,1e-4,1e-2,1].map(v=>({v,l:expo(v,'')})),
+    xLabel:'Reporter distance, r (\u00c5)', yLabel:'Relative electron-transfer rate, k_ET/k\u2080',
+    series:[
+      {data:rr.map(r=>[r,kET(0.9,r)]),color:S3,name:'\u03b2 = 0.9 \u00c5\u207b\u00b9',dash:'4 4',w:1.6},
+      {data:rr.map(r=>[r,kET(1.0,r)]),color:S1,name:'\u03b2 = 1.0 \u00c5\u207b\u00b9'},
+      {data:rr.map(r=>[r,kET(1.1,r)]),color:S2,name:'\u03b2 = 1.1 \u00c5\u207b\u00b9',dash:'4 4',w:1.6}
+    ],
+    markers:[{x:10,y:kET(1.0,10),color:CR,label:'reference reporter'}],
+    fmtX:v=>v.toPrecision(3)+' \u00c5', fmtY:v=>expo(v,'')
+  });
+  document.getElementById('f-beta').innerHTML=
+    `At r = 10 \u00c5 the three curves are <b>${(kET(0.9,10)/kET(1.0,10)).toPrecision(2)}\u00d7</b> and <b>${(kET(1.1,10)/kET(1.0,10)).toPrecision(2)}\u00d7</b> apart. A change in \u03b2 of <b>0.1 \u00c5\u207b\u00b9</b> can therefore affect current as much as a one-\u00e5ngstr\u00f6m displacement in this illustrative tunnelling model. If analyte partitions into the monolayer, I<sub>U</sub> and I<sub>B</sub> may become concentration-dependent; a fitted K<sub>D</sub> could then combine binding and interfacial effects. A Langmuir-shaped response is compatible with binding but is not sufficient evidence by itself.`;
+
+  /* 05.4 — KDM */
+  const rhos=[]; for(let i=0;i<=120;i++) rhos.push(i*0.985/120);
+  plot(document.getElementById('c-kdm'),{
+    xd:[0,0.985], yd:[0,5], H:260, ml:58,
+    xticks:[0,0.25,0.5,0.75,1].map(v=>({v,l:v.toFixed(2)})),
+    yticks:[0,1,2,3,4,5].map(v=>({v,l:v+'\u00d7'})),
+    xLabel:'Between-frequency drift correlation, \u03c1', yLabel:'Ratio to one frequency',
+    hlines:[{y:1,color:cv('--ink-3'),label:'no change'}],
+    vlines:[{x:0.5,color:CR,label:'\u03c1 = 0.5'}],
+    series:[
+      {data:rhos.map(r=>[r,Math.sqrt(2*(1-r))]),color:S2,name:'noise  \u03c3_diff / \u03c3'},
+      {data:rhos.map(r=>[r,Math.SQRT2/Math.sqrt(1-r)]),color:S1,name:'SNR gain (opposite-sign responses)'}
+    ],
+    markers:[{x:P.rho,y:m.sigRatio,color:S3,label:'\u03c1 = '+P.rho.toFixed(2)}],
+    fmtX:v=>'\u03c1 = '+v.toFixed(2), fmtY:v=>v.toPrecision(3)+'\u00d7'
+  });
+  document.getElementById('f-kdm').innerHTML=
+    `<b>Read the two curves separately.</b> In this equal-noise model, subtraction reduces noise only when <b>\u03c1 &gt; 0.5</b>. If the two frequencies also have comparable opposite-sign responses, the signal difference can increase while correlated drift partly cancels. At your assumed \u03c1 = ${P.rho.toFixed(2)}: noise <b>\u00d7${m.sigRatio.toPrecision(3)}</b>, modeled SNR <b>\u00d7${m.snrGain.toPrecision(3)}</b>. The practical result depends on the measured response amplitudes, covariance, and frequency pair; the plotted SNR gain should not be treated as guaranteed.`;
+
+  /* 05.5 — Debye */
+  const Is=lspace(1e-3,1,120);
+  plot(document.getElementById('c-debye'),{
+    xd:[1e-3,1], yd:[0.2,20], logX:1, logY:1, H:250, ml:58,
+    bands:[{from:1e-3,to:1,fill:'transparent'}],
+    xticks:decades(1e-3,1,(v,e)=>'10'+sup(e)),
+    yticks:[0.2,0.5,1,2,5,10,20].map(v=>({v,l:v+' nm'})),
+    xLabel:'Ionic strength, I (M)', yLabel:'Debye length, \u03ba\u207b\u00b9 (nm)',
+    hlines:[{y:m.pocket,color:CR,label:'binding pocket \u2248 5 nm above the gold'}],
+    series:[{data:Is.map(i=>[i,0.304/Math.sqrt(i)]),color:S1}],
+    markers:[{x:P.I,y:m.kappa,color:S2,label:sci(P.I,'M')}],
+    fmtX:v=>v<1?(v*1000).toPrecision(3)+' mM':v.toPrecision(3)+' M', fmtY:v=>v.toPrecision(3)+' nm'
+  });
+  document.getElementById('f-debye').innerHTML=
+    `At I = ${P.I<1?(P.I*1000).toPrecision(3)+' mM':P.I.toPrecision(3)+' M'} the Debye length is <b>${m.kappa.toPrecision(3)} nm</b>, against a pocket sitting roughly <b>5 nm</b> up on its tether. ${
+      m.kappa<m.pocket
+        ? `The nominal pocket distance is <b>${(m.pocket/m.kappa).toPrecision(2)}\u00d7 the Debye length</b>, so a simple field-effect signal would be strongly attenuated under these assumptions. An E-AB tunnelling-distance readout is not governed by the same electrostatic screening length, although its own interfacial effects still require calibration.`
+        : `The Debye length exceeds the nominal pocket height in this estimate, making field-effect coupling less strongly screened; the low ionic strength may also change aptamer folding and affinity.`} The Debye length is a decay scale rather than a hard cutoff, so this comparison is a design indication, not a yes/no rule.`;
+
+  /* ================= 06 signal ================= */
+  document.getElementById('a-see').innerHTML=
+    `For the <em>current parameter set</em>, the predicted equilibrium signal ${m.equilibriumThresholdCrossed?'crosses':'does not cross'} the assumed 3σ threshold (${m.dI.toPrecision(3)}% versus ${m.thr.toPrecision(3)}%). ${m.open
+      ? `This maintained-concentration estimate depends on C, G, σ and K<sub>D</sub>; flow and diffusion affect how quickly it is approached.`
+      : `This finite-chamber estimate also includes receptor capacity because bound analyte is removed from the finite inventory.`}`;
+  const ymax=Math.max(P.G*(1+s),m.thr*1.6);
+  const signalRibbon=s?xs.map(c=>{
+    const low=model({...P,C:c,KD:P.KD*(1+s),G:P.G*(1-s)}).dI;
+    const high=model({...P,C:c,KD:P.KD*(1-s),G:P.G*(1+s)}).dI;
+    return [c,low,high];
+  }):[];
+  plot(document.getElementById('c-sig'),{
+    xd:[1e-15,1e-4], yd:[0.002,ymax], logX:1, logY:1, H:270, ml:62,
+    bands:[{from:1e-15,to:Math.max(1e-15,Math.min(m.CLOD,1e-4)),fill:CSOFT,label:'BELOW BLANK NOISE'}],
+    xticks:decades(1e-15,1e-4,(v,e)=>e%2?'':'10'+sup(e)),
+    yticks:[0.01,0.1,1,10,100,1000].filter(v=>v<=ymax).map(v=>({v,l:v+'%'})),
+    xLabel:'Target concentration (M)', yLabel:'Signal change, ΔS/S (%)',
+    hlines:[{y:m.thr,color:CR,label:'3σ = '+m.thr.toFixed(1)+'%'}],
+    ribbons:s?[{data:signalRibbon,color:S1,opacity:.17,name:`Sensitivity envelope (K_D and G ±${Math.round(100*s)}%)`}]:[],
+    series:[{data:xs.map(c=>[c,P.G*occupancyAt(c,P.KD)]),color:S1,name:'Central estimate'}],
+    markers:[{x:P.C,y:Math.max(m.dI,0.002),color:S2,label:sci(P.C,'M')}],
+    fmtX:v=>sci(v,'M'), fmtY:v=>v<0.01?expo(v,'%'):v.toPrecision(3)+'%'
+  });
+  document.getElementById('f-sig').innerHTML=
+    `With the assumed ${P.G.toFixed(0)}% gain and ${P.sig.toFixed(2)}% blank σ, the modeled 3σ threshold is <b>${m.thr.toFixed(2)}%</b>, corresponding to <b>${sci(m.CLOD,'M')}</b> ${m.open?'maintained concentration':'total chamber concentration'} at equilibrium. ${
+      m.equilibriumThresholdCrossed?`The selected concentration is <b>${(P.C/m.CLOD).toPrecision(3)}× the modeled LOD</b>; this parameter set crosses the model threshold, subject to the stated assumptions.`
+      :`The selected concentration is <b>${(m.CLOD/P.C).toPrecision(3)}× below the modeled LOD</b>. Possible changes include affinity, gain, noise, accessibility${m.open?' or concentration.':', receptor capacity, chamber inventory, or concentration.'} This result applies to the selected scenario rather than the sensing concept in general.`}${s?` The shaded region is a <b>±${Math.round(100*s)}% sensitivity envelope</b> for K<sub>D</sub> and gain, not a statistical confidence interval.`:''}`;
+
+  const ceilings=[
+    ['Static-diffusion capacity in 2 h', m.delivered2h],
+    ['Finite-inventory bound', m.open?1:m.ceiling],
+    ['Exact equilibrium occupancy', m.theta]
+  ].sort((a,b)=>a[1]-b[1]);
+  document.getElementById('t-ceil').innerHTML=
+    `<thead><tr><th>Occupancy constraint / result</th><th class="n">value</th><th>comparison</th></tr></thead><tbody>`+
+    ceilings.map(([k,v],i)=>`<tr${i===0?' class="hi"':''}><td>${i===0?'<strong>'+k+'</strong>':k}</td><td class="n">${pct(v)} %</td><td>${i===0?'<strong>smallest shown</strong>':''}</td></tr>`).join('')+
+    `</tbody>`;
+
+  /* ================= 06 scan ================= */
+  const thetaF=(kd_,kon_)=>m.open?P.C/(kd_+P.C):closedBinding(P.C,m.RT,kd_).theta;
+  const t90F=(kd_,kon_)=>associationTime90(P.C,m.RT,kd_,kon_,m.open);
+  const konForTime=(kd_,seconds)=>{
+    if(m.open) return Math.LN10/(seconds*(P.C+kd_));
+    const s=closedBinding(P.C,m.RT,kd_);
+    return s.root>0&&s.Bhi>0?Math.log(10-9*s.B/s.Bhi)/(seconds*s.root):Infinity;
+  };
+  heatmap(document.getElementById('hm-theta'),{
+    xd:KDR, yd:KONR, ramp:rampT,
+    f:thetaF, norm:v=>(Math.log10(Math.max(v,1e-8))+8)/8,
+    fmt:v=>'<b>θ </b>'+(v*100<0.001?(v*100).toExponential(2):(v*100).toPrecision(3))+' %',
+    xticks:decades(KDR[0],KDR[1],(v,e)=>e%2?'':'10'+sup(e)),
+    yticks:decades(KONR[0],KONR[1],(v,e)=>e%2?'':'10'+sup(e)),
+    mark:{x:P.KD,y:P.kon},
+    aria:'Occupancy over a grid of K_D and k_on'
+  });
+  heatmap(document.getElementById('hm-t90'),{
+    xd:KDR, yd:KONR, ramp:rampA,
+    f:t90F, norm:v=>1-(Math.log10(Math.min(Math.max(v,1e-3),1e8))+3)/11,
+    fmt:v=>'<b>t₉₀ </b>'+dur(v),
+    xticks:decades(KDR[0],KDR[1],(v,e)=>e%2?'':'10'+sup(e)),
+    yticks:decades(KONR[0],KONR[1],(v,e)=>e%2?'':'10'+sup(e)),
+    contours:[
+      {label:'1 min', solve:kd_=>konForTime(kd_,60)},
+      {label:'1 h',   solve:kd_=>konForTime(kd_,3600)},
+      {label:'1 day', solve:kd_=>konForTime(kd_,86400)}
+    ],
+    mark:{x:P.KD,y:P.kon},
+    aria:'Response time over the same grid of K_D and k_on'
+  });
+  document.getElementById('r1bar').style.background=rampCss(rampT);
+  document.getElementById('r2bar').style.background=rampCss(rampA);
+  document.getElementById('r1lo').textContent='10⁻⁶ %'; document.getElementById('r1hi').textContent='100 %';
+  document.getElementById('r2lo').textContent='slow · 3 yr'; document.getElementById('r2hi').textContent='fast · 1 ms';
+
+  const kdl=lspace(1e-12,1e-5,180);
+  const conc=[P.C/10,P.C,P.C*10,P.C*100];
+  const rampPick=[0.28,0.46,0.66,0.88];
+  plot(document.getElementById('c-req'),{
+    xd:[1e-12,1e-5], yd:[1e-4,150], logX:1, logY:1, H:290, ml:62,
+    bands:[{from:Math.max(m.KDmax,1e-12),to:1e-5,fill:CSOFT,label:'K_D TOO LOOSE TO DETECT'}],
+    xticks:decades(1e-12,1e-5,(v,e)=>'10'+sup(e)),
+    yticks:[1e-4,1e-2,1,100].map(v=>({v,l:v<1?expo(v,'%'):v+'%'})),
+    xLabel:'Affinity, K_D (M)', yLabel:'Occupancy, θ (%)',
+    hlines:[{y:m.thTh*100,color:CR,label:'detection threshold θ = '+(m.thTh*100).toPrecision(2)+'%'}],
+    series:conc.map((c,i)=>({
+      data:kdl.map(k=>[k,100*(m.open?c/(k+c):closedBinding(c,m.RT,k).theta)]),
+      color:rampColor(rampT,rampPick[i]),
+      name:sci(c,'M'), w:i===1?2.6:1.8
+    })),
+    markers:[{x:P.KD,y:m.theta*100,color:CR,label:'candidate'}],
+    fmtX:v=>sci(v,'M'), fmtY:v=>v<0.01?expo(v,'%'):v.toPrecision(3)+'%'
+  });
+  document.getElementById('f-req').innerHTML=
+    `A curve must clear the dashed line to be detectable. At ${sci(P.C,'M')} with ${P.G.toFixed(0)}% gain and ${P.sig.toFixed(2)}% blank σ, ${!m.open&&m.KDmax===0?`the finite inventory cannot occupy the required ${(m.thTh*100).toPrecision(3)}% of receptors even at K<sub>D</sub> → 0; the surface would require ${sci(m.RT*m.thTh,'M')} simply to fill that fraction.`:`the loosest usable affinity is <b>K<sub>D</sub> ≤ ${sci(m.KDmax,'M')}</b>${m.open?` — <b>${(m.KDmax/P.C).toPrecision(3)}× the target concentration</b>, a ratio fixed by gain and noise.`:`. The closed-chamber requirement includes R<sub>T</sub> because the surface consumes ${sci(m.RT*m.thTh,'M')} at threshold.`}`} ${
+      P.KD<=m.KDmax?`The candidate K<sub>D</sub> of ${sci(P.KD,'M')} <b>clears it</b>.`
+      :m.KDmax>0?`The candidate K<sub>D</sub> of ${sci(P.KD,'M')} is <b>${(P.KD/m.KDmax).toPrecision(3)}× above that modeled limit</b>.`:`Under the selected finite-inventory assumptions, even the K<sub>D</sub> → 0 limit does not reach the threshold.`}
+     ${m.open?`<b>The requirement is linear in target concentration:</b> a tenfold error in C is worth exactly as much as a tenfold gain in affinity.`:`In the closed model that proportionality is offset by the receptor-capacity term.`}`;
+
+  document.getElementById('t-req').innerHTML=
+    `<thead><tr><th>If the target is…</th><th class="n">need K_D ≤</th><th class="n">vs candidate ${sci(P.KD,'M')}</th></tr></thead><tbody>`+
+    [1e-12,1e-11,1e-10,1e-9].map(c=>{
+      const need=m.thTh<1?Math.max(0,(c-(m.open?0:m.RT*m.thTh))*(1-m.thTh)/m.thTh):0;
+      const ok=P.KD<=need;
+      return `<tr${Math.abs(Math.log10(c/P.C))<.01?' class="hi"':''}><td>${sci(c,'M')}</td><td class="n">${need>0?sci(need,'M'):'not reached in model'}</td><td class="n" style="color:${ok?'var(--ok)':'var(--crit)'}">${ok?'crosses model threshold':need>0?(P.KD/need).toPrecision(2)+'× above modeled limit':'inventory term exceeds C'}</td></tr>`;
+    }).join('')+`</tbody>`;
+
+  /* ================= 07 dynamic ================= */
+  document.getElementById('a-fast').innerHTML=
+    `${m.open?'For maintained-concentration monitoring':'For the selected finite-chamber relaxation approximation'}, the shortest change this model can follow has a period of <em>${dur(1/m.fc)}</em>. ${
+      m.tauD>m.tauR&&m.tauD>m.tauA ? `The chamber is the bottleneck, not the aptamer.`
+      : m.tauA>m.tauR&&m.tauA>m.tauD ? `Replacing the chamber contents is the bottleneck — not the chemistry, and not diffusion.`
+      : `The binding itself is the bottleneck; geometry has stopped mattering.`}`;
+  barChart(document.getElementById('c-lag'),[
+    {label:'crossing the chamber',      t:m.tauD, c:S1, sub:'τ_D = H² / D'},
+    {label:'re-equilibrating the bond', t:m.tauR, c:S2, sub:m.open?'τ_R = 1/(k_on·C + k_off)':'τ_R = 1/(k_on·closed-system root)'},
+    {label:'replacing the contents',    t:m.tauA, c:S3, sub:P.Q>0?'τ_A = V / Q':'τ_A = H / q  (passive supply)'}
+  ],{axis:'Process delay (log scale)',ml:172});
+  const worst=[['diffusion',m.tauD],['binding',m.tauR],['exchange',m.tauA]].sort((a,b)=>b[1]-a[1])[0];
+  document.getElementById('f-lag').innerHTML=
+    `Converting each to a cutoff and adding the <b>periods</b> gives f<sub>c</sub> = <b>${expo(m.fc,'Hz')}</b>, a shortest trackable period of <b>${dur(1/m.fc)}</b>. <b>${worst[0]}</b> contributes ${(100*(worst[0]==='diffusion'?1/m.fcD:worst[0]==='binding'?1/m.fcR:1/m.fcA)*m.fc).toFixed(0)}% of the total lag. ${
+      P.Q>0
+        ? `This is the <b>pumped</b> case. With passive supply, τ<sub>A</sub> becomes H/q = <b>${dur(m.tauA_passive)}</b> at ${P.q.toFixed(2)} µL/min/cm² — set flow to static to compare.`
+        : `This is the <b>passively supplied</b> case: τ<sub>A</sub> = H/q, in which chamber radius cancels and only height and supply flux remain. Turn the pump on to compare.`} The shortest trackable period is <b>${dur(1/m.fc)}</b>.`;
+
+  document.getElementById('lv-live').innerHTML=
+    `<b>At these parameters:</b> C<sub>b,0</sub> = Γ/H = <b>${sci(m.Cb0/1000,'M')}</b>, so α = <b>${m.alpha<1?m.alpha.toPrecision(2):commas(m.alpha)}</b>. ` +
+    (m.alpha>=2
+      ? `The low-analyte interpolation gives <b>${dur(m.tauClosed)}</b> for the closed reaction time, versus <b>${dur(1/m.koff)}</b> for the low-concentration open limit.`
+      : `α is below 2, so the limited-volume condition (C<sub>b,0</sub> ≫ K<sub>D</sub>) does not hold here and there is nothing to gain — <b>a loose binder is already fast.</b> Tighten K<sub>D</sub> or thin the chamber and watch α climb.`);
+  document.getElementById('lv-cost').innerHTML=
+    `<b>Linearised estimate at f<sub>init</sub> = 0:</b> Δf per cycle = <b>${m.dfCycle<0.001?m.dfCycle.toExponential(2):m.dfCycle.toPrecision(3)}</b> (${(m.dfCycle*100).toPrecision(2)}% occupancy change). ${m.dfCycle>=0.1?`<b style="color:var(--crit)">This is outside the small-occupancy regime; use the full mass balance instead of the invariant.</b> `:''}Reading it needs a blank σ below <b>${(m.dfCycle*P.G/3).toPrecision(2)}%</b> at ${P.G.toFixed(0)}% gain; you have <b>${P.sig.toFixed(2)}%</b> — ${
+      m.dfCycle*P.G>=3*P.sig ? `<b>which is enough under the linearised assumptions.</b>` : `<b>a factor of ${(3*P.sig/(m.dfCycle*P.G)).toPrecision(2)} short.</b>`}`;
+
+  /* ================= ask ================= */
+  document.getElementById('ask-live').innerHTML=
+    m.open
+      ? `The maintained-concentration requirement is <code>K<sub>D</sub> ≤ ${(m.KDmax/P.C).toPrecision(3)} × C</code>. At ${sci(P.C,'M')} that means K<sub>D</sub> ≤ ${sci(m.KDmax,'M')}, and the ${sci(P.KD,'M')} candidate is ${P.KD<=m.KDmax?'inside it':(P.KD/m.KDmax).toPrecision(3)+'× outside it'}. A tenfold change in operating concentration shifts the allowable K<sub>D</sub> by the same factor.`
+      : `For the finite closed chamber, the requirement is <code>C<sub>total</sub> ≥ K<sub>D</sub>θ<sub>thr</sub>/(1−θ<sub>thr</sub>) + R<sub>T</sub>θ<sub>thr</sub></code>. ${m.KDmax>0?`At ${sci(P.C,'M')} that means K<sub>D</sub> ≤ ${sci(m.KDmax,'M')}.`:`Here R<sub>T</sub>θ<sub>thr</sub> alone is ${sci(m.RT*m.thTh,'M')}, above the ${sci(P.C,'M')} inventory, so no K<sub>D</sub> can reach the threshold without changing receptor capacity, gain, noise, or total analyte.`}`;
+}
+
+/* ---------------- controls ---------------- */
+document.getElementById('ctls').innerHTML=
+  `<div class="ctl"><label class="name" for="v-mode">Sample boundary</label><select class="val" id="v-mode" aria-label="Sample boundary"><option value="closed">Finite / sealed chamber</option><option value="open">Maintained concentration</option></select></div>`+
+  `<div class="ctl"><label class="name" for="v-sens">Sensitivity envelope</label><select class="val" id="v-sens" aria-label="Sensitivity envelope"><option value="0">Off</option><option value="0.1">±10%</option><option value="0.25">±25%</option><option value="0.5">±50%</option></select></div>`+
+  CTL.map(c=>
+  `<div class="ctl"><label class="name" for="v-${c.k}">${c.name}</label><input class="val" id="v-${c.k}" type="text" inputmode="decimal" spellcheck="false" aria-label="${c.name} — type a value"><input type="range" id="r-${c.k}" min="0" max="1000" step="1" aria-label="${c.name} slider"></div>`).join('');
+const toS=c=>c.log?1000*(Math.log10(P[c.k])-Math.log10(c.min))/(Math.log10(c.max)-Math.log10(c.min)):1000*(P[c.k]-c.min)/(c.max-c.min);
+const fromS=(c,s)=>c.log?Math.pow(10,Math.log10(c.min)+s/1000*(Math.log10(c.max)-Math.log10(c.min))):c.min+s/1000*(c.max-c.min);
+const SIP={f:1e-15,p:1e-12,n:1e-9,'µ':1e-6,'u':1e-6,m:1e-3,k:1e3};
+function parseVal(c,txt){
+  const t=String(txt).trim().replace(/,/g,'').replace(/\s+/g,' ');
+  const mm=t.match(/^([+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?)\s*([a-zA-Zµ]?)(.*)$/);
+  if(!mm) return null;
+  let v=parseFloat(mm[1]);
+  if(!isFinite(v)) return null;
+  if(c.percent && /%/.test(t)) v/=100;
+  else if(c.scale) v*=c.scale;
+  else if(c.rawUnit) v=v;
+  else{ const pfx=mm[2], rest=mm[3]||'';
+        if(pfx && SIP[pfx]!==undefined && /^[a-zA-Zµ²³⁻]/.test(rest)) v*=SIP[pfx]; }
+  if(v<c.min) v=c.min;
+  if(v>c.max) v=c.max;
+  return v;
+}
+function syncUI(){
+  document.getElementById('v-mode').value=P.mode;
+  document.getElementById('v-sens').value=String(P.sens);
+  CTL.forEach(c=>{
+  document.getElementById('r-'+c.k).value=toS(c);
+  const f=document.getElementById('v-'+c.k); f.value=c.fmt(P[c.k]); f.classList.remove('bad');
+});}
+document.getElementById('v-mode').addEventListener('change',e=>{P.mode=e.target.value;render();});
+document.getElementById('v-sens').addEventListener('change',e=>{P.sens=+e.target.value;render();});
+CTL.forEach(c=>{
+  const rng=document.getElementById('r-'+c.k), fld=document.getElementById('v-'+c.k);
+  rng.addEventListener('input',e=>{
+    P[c.k]=fromS(c,+e.target.value);
+    fld.value=c.fmt(P[c.k]); fld.classList.remove('bad');
+    render();
+  });
+  const commit=()=>{
+    const v=parseVal(c,fld.value);
+    if(v===null){ fld.classList.add('bad'); return; }
+    fld.classList.remove('bad');
+    P[c.k]=v; rng.value=toS(c); fld.value=c.fmt(v);
+    render();
+  };
+  fld.addEventListener('change',commit);
+  fld.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); commit(); fld.blur(); } });
+  fld.addEventListener('focus',()=>fld.select());
+  fld.addEventListener('blur',()=>{ fld.classList.remove('bad'); fld.value=c.fmt(P[c.k]); });
+});
+const DEFAULTS={...P};
+document.querySelectorAll('[data-preset]').forEach(b=>{
+  b.addEventListener('click',()=>{
+    Object.assign(P,DEFAULTS,PRESETS[b.dataset.preset]);
+    document.querySelectorAll('[data-preset]').forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));
+    syncUI(); render();
+  });
+});
+document.getElementById('reset').addEventListener('click',()=>{
+  Object.assign(P,DEFAULTS);
+  document.querySelectorAll('[data-preset]').forEach(x=>x.setAttribute('aria-pressed','false'));
+  syncUI(); render();
+});
+syncUI(); render();
+
+function sensorSummary(){
+  const m=model(P);
+  return {
+    sample_boundary:m.open?'maintained':'finite_closed',
+    occupancy_fraction:m.theta,
+    signal_change_percent:m.dI,
+    equilibrium_threshold_crossed:m.equilibriumThresholdCrossed,
+    lod_molar:Number.isFinite(m.CLOD)?m.CLOD:null,
+    ideal_binding_only_threshold_time_seconds:Number.isFinite(m.tDetect)?m.tDetect:null,
+    binding_t90_seconds:m.t90,
+    delivery_time_seconds:m.tDel,
+    cutoff_hz:m.fc,
+    shortest_trackable_period_seconds:1/m.fc,
+    mass_transport_damkohler:m.Da,
+    accessible_surface_density_cm2:m.gamAcc,
+    geometric_coverage_fraction:m.coverage
+  };
+}
+(function registerWebMCP(){
+  const context=document.modelContext;
+  if(!context?.registerTool) return;
+  const lifecycle=new AbortController();
+  const properties={mode:{type:'string',enum:['open','closed']},...Object.fromEntries(CTL.map(c=>[c.k,{type:'number',minimum:c.min,maximum:c.max}]))};
+  Promise.resolve(context.registerTool({
+    name:'configure_sensor_parameters',
+    title:'Configure sensor parameters',
+    description:'Set one or more validated EAB sensor inputs, update the visible workbench, and return the recalculated performance summary.',
+    inputSchema:{type:'object',properties,minProperties:1,additionalProperties:false},
+    annotations:{readOnlyHint:false,untrustedContentHint:false},
+    execute(input){
+      if(!input||typeof input!=='object'||Array.isArray(input)) throw new Error('Provide an object containing at least one sensor parameter.');
+      const entries=Object.entries(input);
+      if(!entries.length) throw new Error('At least one parameter is required.');
+      for(const [key,value] of entries){
+        if(key==='mode'){
+          if(value!=='open'&&value!=='closed') throw new Error('mode must be open or closed.');
+          continue;
+        }
+        const c=CTL.find(item=>item.k===key);
+        if(!c) throw new Error(`Unknown parameter: ${key}`);
+        if(typeof value!=='number'||!Number.isFinite(value)||value<c.min||value>c.max) throw new Error(`${key} must be between ${c.min} and ${c.max}.`);
+      }
+      for(const [key,value] of entries) P[key]=value;
+      syncUI(); render();
+      return {updated:Object.keys(input),summary:sensorSummary()};
+    }
+  },{signal:lifecycle.signal})).catch(()=>{});
+  Promise.resolve(context.registerTool({
+    name:'read_sensor_summary',
+    title:'Read sensor summary',
+    description:'Return the current calculated occupancy, signal, detection, transport, surface, and dynamic performance without changing the workbench.',
+    inputSchema:{type:'object',properties:{},additionalProperties:false},
+    annotations:{readOnlyHint:true,untrustedContentHint:false},
+    execute(){ return sensorSummary(); }
+  },{signal:lifecycle.signal})).catch(()=>{});
+  addEventListener('pagehide',()=>lifecycle.abort(),{once:true});
+})();
+
+let rt; addEventListener('resize',()=>{clearTimeout(rt); rt=setTimeout(render,120);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',render);
+</script>
